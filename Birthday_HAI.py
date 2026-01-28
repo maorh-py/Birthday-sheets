@@ -11,7 +11,7 @@ st.set_page_config(page_title="ניהול ימי הולדת חכם", layout="wid
 conn = st.connection("gsheets", type=GSheetsConnection)
 
 # קריאת נתונים - ttl=0 מבטיח רענון
-df_raw = conn.read(ttl=0).dropna(how="all")
+df_raw = conn.read(worksheet="Data", ttl=0).dropna(how="all")
 
 # פונקציית מזלות
 def get_zodiac(d, m):
@@ -63,12 +63,10 @@ with st.expander("➕ הוספת חוגג חדש"):
                 new_row = pd.DataFrame([{"Full_Name": name, "Birthday": bday.strftime("%d/%m/%Y")}])
                 updated_df = pd.concat([df_raw, new_row], ignore_index=True)
                 
-                try:
-                    # ניסיון עדכון מפורש ללשונית Sheet1
-                    conn.update(worksheet="Sheet1", data=updated_df)
+               try:
+                    conn.update(worksheet="Data", data=updated_df)
                     st.cache_data.clear()
-                    st.success(f"החוגג {name} נוסף בהצלחה!")
+                    st.success("נשמר בהצלחה!")
                     st.rerun()
                 except Exception as e:
                     st.error("גוגל עדיין חוסם את הכתיבה.")
-                    st.info("פתרון אחרון: כנס ל-Share בגליון, וודא שהמייל של streamlit הוא Editor.")
