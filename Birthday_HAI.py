@@ -93,19 +93,31 @@ if not report_df.empty:
 else:
     st.info("הרשימה ריקה כרגע. השתמש בטופס למטה כדי להוסיף חוגגים.")
 
+# --- הוספה וכתיבה מחדש ---
 st.write("---")
-# הוספת חוגג - ממוקם בתחתית
-with st.expander("➕ הוספת חוגג חדש (סנכרון לאקסל)"):
+with st.expander("➕ הוספת חוגג חדש"):
     with st.form("add_form", clear_on_submit=True):
         name = st.text_input("שם מלא:")
-        b_date_input = st.date_input("תאריך לידה:", value=date(1990, 1, 1))
+        bday_val = st.date_input("תאריך לידה:", value=date(1990, 1, 1))
         if st.form_submit_button("שמור ועדכן גליון"):
             if name:
-                new_row = pd.DataFrame([{"Full_Name": name, "Birthday": b_date_input.strftime("%d/%m/%Y")}])
-                updated_df = pd.concat([df_raw, new_row], ignore_index=True)
-                # דריסת כל הגליון עם הטבלה המעודכנת
-                conn.update(data=updated_df)
-                st.cache_data.clear() # רענון הנתונים
-                st.success(f"החוגג {name} נוסף וסונכרן בהצלחה!")
+                # יצירת השורה החדשה
+                new_row = pd.DataFrame([{"Full_Name": name, "Birthday": bday_val.strftime("%d/%m/%Y")}])
+                
+                # איחוד עם הנתונים הקיימים (אם יש)
+                if not df_raw.empty:
+                    updated_df = pd.concat([df_raw, new_row], ignore_index=True)
+                else:
+                    updated_df = new_row
+                
+                # שימוש בשיטה חלופית לכתיבה
+                try:
+                    conn.update(worksheet="Sheet1", data=updated_df)
+                except:
+                    # אם נכשל, ננסה לציין את שם הגיליון במפורש (וודא ששם הגיליון למטה הוא Sheet1 או 'גיליון1')
+                    conn.update(data=updated_df)
+                
+                st.cache_data.clear()
+                st.success(f"החוגג {name} נוסף בהצלחה!")
                 st.rerun()
 
