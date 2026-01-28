@@ -1,82 +1,76 @@
 import streamlit as st
 import pandas as pd
-from datetime import datetime, date
+from datetime import date
 from pyluach import dates
 
-# הגדרות עיצוב
-st.set_page_config(page_title="Birthday Cloud Hub", layout="wide")
+# הגדרות דף
+st.set_page_config(page_title="ניהול ימי הולדת חכם", layout="wide")
+st.markdown('<style>html, body { direction: rtl; text-align: right; }</style>', unsafe_allow_html=True)
 
-st.markdown("""
-    <style>
-    .main { direction: rtl; text-align: right; }
-    h1 { color: #FF4B4B; text-align: center; }
-    .birthday-card {
-        background: linear-gradient(135deg, #fff5f5 0%, #feb2b2 100%);
-        padding: 30px; border-radius: 20px; text-align: center;
-        border: 2px dashed #FF4B4B; margin-bottom: 20px;
-    }
-    .section-header { background: #FF4B4B; color: white; padding: 10px; border-radius: 10px; font-weight: bold; }
-    </style>
-    """, unsafe_allow_html=True)
+SHEET_URL = "https://docs.google.com/spreadsheets/d/1XlI_22rK5zR6-83V_m7C9i2N_SbeE6Z2D6W8pXvE/export?format=csv"
 
-# פונקציות חישוב
-def get_zodiac(dt):
-    day, month = dt.day, dt.month
-    if (month == 3 and day >= 21) or (month == 4 and day <= 19): return "טלה ♈"
-    if (month == 4 and day >= 20) or (month == 5 and day <= 20): return "שור ♉"
-    if (month == 5 and day >= 21) or (month == 6 and day <= 20): return "תאומים ♊"
-    if (month == 6 and day >= 21) or (month == 7 and day <= 22): return "סרטן ♋"
-    if (month == 7 and day >= 23) or (month == 8 and day <= 22): return "אריה ♌"
-    if (month == 8 and day >= 23) or (month == 9 and day <= 22): return "בתולה ♍"
-    if (month == 9 and day >= 23) or (month == 10 and day <= 22): return "מאזניים ♎"
-    if (month == 10 and day >= 23) or (month == 11 and day <= 21): return "עקרב ♏"
-    if (month == 11 and day >= 22) or (month == 12 and day <= 21): return "קשת ♐"
-    if (month == 12 and day >= 22) or (month == 1 and day <= 19): return "גדי ♑"
-    if (month == 1 and day >= 20) or (month == 2 and day <= 18): return "דלי ♒"
+def get_zodiac(d, m):
+    if (m == 3 and d >= 21) or (m == 4 and d <= 19): return "טלה ♈"
+    if (m == 4 and d >= 20) or (m == 5 and d <= 20): return "שור ♉"
+    if (m == 5 and d >= 21) or (m == 6 and d <= 20): return "תאומים ♊"
+    if (m == 6 and d >= 21) or (m == 7 and d <= 22): return "סרטן ♋"
+    if (m == 7 and d >= 23) or (m == 8 and d <= 22): return "אריה ♌"
+    if (m == 8 and d >= 23) or (m == 9 and d <= 22): return "בתולה ♍"
+    if (m == 9 and d >= 23) or (m == 10 and d <= 22): return "מאזניים ♎"
+    if (m == 10 and d >= 23) or (m == 11 and d <= 21): return "עקרב ♏"
+    if (m == 11 and d >= 22) or (m == 12 and d <= 21): return "קשת ♐"
+    if (m == 12 and d >= 22) or (m == 1 and d <= 19): return "גדי ♑"
+    if (m == 1 and d >= 20) or (m == 2 and d <= 18): return "דלי ♒"
     return "דגים ♓"
 
-def calculate_age(birth_date):
-    today = date.today()
-    return today.year - birth_date.year - ((today.month, today.day) < (birth_date.month, birth_date.day))
-
-st.markdown("<h1>🎊 ימי הולדת מסונכרנים לענן 🎊</h1>", unsafe_allow_html=True)
-
-# הזנת הקישור מהגוגל שיטס (ה-CSV שפרסמת)
-csv_url = st.text_input("הדבק כאן את קישור ה-CSV שקיבלת מ'פרסום באינטרנט':")
-
-if csv_url:
+def get_hebrew_date(d_obj):
     try:
-        # קריאת הנתונים
-        df = pd.read_csv(csv_url)
-        # ניקוי עמודות למקרה שיש רווחים
-        df.columns = df.columns.str.strip()
-        df['Birthday'] = pd.to_datetime(df['Birthday']).dt.date
-        
-        today = date.today()
-        
-        # חישובים
-        df['תאריך עברי'] = df['Birthday'].apply(lambda x: dates.HebrewDate.from_pydate(x).hebrew_date_string())
-        df['גיל'] = df['Birthday'].apply(calculate_age)
-        df['מזל'] = df['Birthday'].apply(get_zodiac)
-        
-        # זיהוי חוגגים היום
-        celebrating = df[(df['Birthday'].apply(lambda x: x.month == today.month and x.day == today.day))]
-        
-        if not celebrating.empty:
-            st.balloons()
-            for _, row in celebrating.iterrows():
-                st.markdown(f"""
-                    <div class="birthday-card">
-                        <h2>🎂 מזל טוב ל-{row['Full_Name']}!</h2>
-                        <p>חוגג/ת היום {int(row['גיל'])} שנים (מזל {row['מזל']})</p>
-                    </div>
-                """, unsafe_allow_html=True)
+        h = dates.HebrewDate.from_pydate(d_obj)
+        # פורמט בסיסי: יום, חודש (מספר)
+        return f"{h.day} ב{h.month_name('he')}"
+    except: return "לא חושב"
 
-        # טבלה מלאה
-        st.markdown('<div class="section-header">📋 רשימת ימי הולדת מעודכנת</div>', unsafe_allow_html=True)
-        st.dataframe(df[['Full_Name', 'Birthday', 'תאריך עברי', 'מזל', 'גיל']], use_container_width=True, hide_index=True)
+st.title("🎂 ניהול ימי הולדת חכם")
 
-    except Exception as e:
-        st.warning("ממתין לקישור CSV תקין מגוגל שיטס...")
-else:
-    st.info("כדי להתחיל, פרסם את הגוגל שיטס שלך כ-CSV והדבק את הקישור למעלה.")
+try:
+    df = pd.read_csv(SHEET_URL)
+    df.columns = [col.strip() for col in df.columns]
+    df['Birthday'] = pd.to_datetime(df['Birthday'])
+    
+    today = date.today()
+    full_data = []
+
+    for _, row in df.iterrows():
+        bday = row['Birthday'].date()
+        
+        # חישוב ימים שנותרו
+        this_year_bday = bday.replace(year=today.year)
+        if this_year_bday < today:
+            this_year_bday = this_year_bday.replace(year=today.year + 1)
+        days_left = (this_year_bday - today).days
+        
+        full_data.append({
+            "שם": row['Full_Name'],
+            "תאריך לועזי": bday.strftime('%d/%m/%Y'),
+            "תאריך עברי": get_hebrew_date(bday),
+            "מזל": get_zodiac(bday.day, bday.month),
+            "ימים שנותרו": days_left,
+            "חודש": bday.month
+        })
+
+    report_df = pd.DataFrame(full_data)
+
+    # טבלת חוגגי החודש
+    st.subheader(f"📅 חוגגים החודש ({today.strftime('%m')})")
+    current_month = report_df[report_df['חודש'] == today.month]
+    if not current_month.empty:
+        st.table(current_month[["שם", "תאריך לועזי", "ימים שנותרו"]])
+    else:
+        st.info("אין ימי הולדת החודש 🎈")
+
+    # טבלה כללית
+    st.subheader("📋 רשימה כללית")
+    st.dataframe(report_df[["שם", "תאריך לועזי", "תאריך עברי", "מזל", "ימים שנותרו"]].sort_values("ימים שנותרו"), use_container_width=True)
+
+except Exception as e:
+    st.error(f"שגיאה בעיבוד הנתונים: {e}")
