@@ -21,7 +21,7 @@ st.markdown("""
 
 # חיבור לגליון (משתמש ב-Secrets שהגדרת)
 conn = st.connection("gsheets", type=GSheetsConnection)
-
+st.write("האם הצלחתי להתחבר?", conn.read(ttl=0).columns.tolist())
 def get_zodiac(d, m):
     if (m == 3 and d >= 21) or (m == 4 and d <= 19): return "טלה ♈"
     if (m == 4 and d >= 20) or (m == 5 and d <= 20): return "שור ♉"
@@ -108,3 +108,4 @@ with st.expander("➕ הוספת חוגג חדש (סנכרון לאקסל)"):
                 st.cache_data.clear() # רענון הנתונים
                 st.success(f"החוגג {name} נוסף וסונכרן בהצלחה!")
                 st.rerun()
+
