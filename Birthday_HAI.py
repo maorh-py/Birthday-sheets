@@ -7,7 +7,7 @@ from pyluach import dates
 st.set_page_config(page_title="ניהול ימי הולדת חכם", layout="wide")
 st.markdown('<style>html, body { direction: rtl; text-align: right; }</style>', unsafe_allow_html=True)
 
-# זה הקישור הנכון לייצוא נתונים נקיים
+# קישור לגליון
 SHEET_URL = "https://docs.google.com/spreadsheets/d/1dIJIgpiND9yj4mWPZNxDwZaQyxDqAATH6Lp_TLFXmwI/export?format=csv"
 
 def get_zodiac(d, m):
@@ -24,57 +24,71 @@ def get_zodiac(d, m):
     if (m == 1 and d >= 20) or (m == 2 and d <= 18): return "דלי ♒"
     return "דגים ♓"
 
-def get_hebrew_date(d_obj):
-    try:
-        h = dates.HebrewDate.from_pydate(d_obj)
-        # פורמט בסיסי: יום, חודש (מספר)
-        return f"{h.day} ב{h.month_name('he')}"
-    except: return "לא חושב"
-
 st.title("🎂 ניהול ימי הולדת חכם")
 
 try:
     df = pd.read_csv(SHEET_URL)
     df.columns = [col.strip() for col in df.columns]
-    df['Birthday'] = pd.to_datetime(df['Birthday'])
+    df['Birthday'] = pd.to_datetime(df['Birthday'], dayfirst=True)
     
     today = date.today()
     full_data = []
+    celebrants_today = []
 
     for _, row in df.iterrows():
-        bday = row['Birthday'].date()
+        bday_dt = row['Birthday']
+        bday = bday_dt.date()
         
-        # חישוב ימים שנותרו
+        # חישוב גיל
+        age = today.year - bday.year
+        
+        # בדיקה אם היום יום הולדת
+        is_today = (bday.day == today.day and bday.month == today.month)
+        if is_today:
+            celebrants_today.append({"שם": row['Full_Name'], "גיל": age})
+
+        # חישוב ימים שנותרו (רק לחוגגי החודש נציג את זה בטבלה)
         this_year_bday = bday.replace(year=today.year)
         if this_year_bday < today:
             this_year_bday = this_year_bday.replace(year=today.year + 1)
         days_left = (this_year_bday - today).days
         
+        # תאריך עברי (מספרים ואותיות)
+        h_date = dates.HebrewDate.from_pydate(bday)
+        hebrew_numbers = f"{h_date.day}.{h_date.month}.{h_date.year}"
+        hebrew_letters = h_date.hebrew_date_string() # מחזיר בפורמט "י"ח בשבט"
+
         full_data.append({
             "שם": row['Full_Name'],
             "תאריך לועזי": bday.strftime('%d/%m/%Y'),
-            "תאריך עברי": get_hebrew_date(bday),
+            "תאריך עברי (מספרים)": hebrew_numbers,
+            "תאריך עברי (אותיות)": hebrew_letters,
             "מזל": get_zodiac(bday.day, bday.month),
             "ימים שנותרו": days_left,
-            "חודש": bday.month
+            "חודש": bday.month,
+            "גיל": age
         })
 
     report_df = pd.DataFrame(full_data)
 
-    # טבלת חוגגי החודש
+    # הצגת חוגגי היום עם בלונים
+    if celebrants_today:
+        st.balloons()
+        for person in celebrants_today:
+            st.success(f"🎉 מזל טוב ל**{person['שם']}** שחוגג/ת היום יום הולדת {person['גיל']}! 🎈")
+
+    # טבלת חוגגי החודש - כולל "ימים שנותרו"
     st.subheader(f"📅 חוגגים החודש ({today.strftime('%m')})")
-    current_month = report_df[report_df['חודש'] == today.month]
+    current_month = report_df[report_df['חודש'] == today.month].sort_values("ימים שנותרו")
     if not current_month.empty:
-        st.table(current_month[["שם", "תאריך לועזי", "ימים שנותרו"]])
+        st.table(current_month[["שם", "תאריך לועזי", "ימים שנותרו", "גיל"]])
     else:
         st.info("אין ימי הולדת החודש 🎈")
 
-    # טבלה כללית
+    # טבלה כללית - ללא "ימים שנותרו" (לפי בקשתך)
     st.subheader("📋 רשימה כללית")
-    st.dataframe(report_df[["שם", "תאריך לועזי", "תאריך עברי", "מזל", "ימים שנותרו"]].sort_values("ימים שנותרו"), use_container_width=True)
+    st.dataframe(report_df[["שם", "תאריך לועזי", "תאריך עברי (מספרים)", "תאריך עברי (אותיות)", "מזל", "גיל"]], 
+                 use_container_width=True, hide_index=True)
 
 except Exception as e:
-    st.error(f"שגיאה בעיבוד הנתונים: {e}")
-
-
-
+    st.error(f"שגיאה: {e}")
