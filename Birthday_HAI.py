@@ -7,7 +7,8 @@ from pyluach import dates
 st.set_page_config(page_title="ניהול ימי הולדת חכם", layout="wide")
 st.markdown('<style>html, body { direction: rtl; text-align: right; }</style>', unsafe_allow_html=True)
 
-SHEET_URL = "https://docs.google.com/spreadsheets/d/1dIJIgpiND9yj4mWPZNxDwZaQyxDqAATH6Lp_TLFXmwI/edit?usp=sharing"
+# זה הקישור הנכון לייצוא נתונים נקיים
+SHEET_URL = "https://docs.google.com/spreadsheets/d/1dIJIgpiND9yj4mWPZNxDwZaQyxDqAATH6Lp_TLFXmwI/export?format=csv"
 
 def get_zodiac(d, m):
     if (m == 3 and d >= 21) or (m == 4 and d <= 19): return "טלה ♈"
@@ -74,5 +75,6 @@ try:
 
 except Exception as e:
     st.error(f"שגיאה בעיבוד הנתונים: {e}")
+
 
 
