@@ -1,4 +1,5 @@
 import streamlit as st
+from streamlit_gsheets import GSheetsConnection
 import pandas as pd
 from datetime import date
 from pyluach import dates
@@ -6,30 +7,8 @@ from pyluach import dates
 # הגדרות דף
 st.set_page_config(page_title="ניהול ימי הולדת חכם", layout="wide")
 
-# עיצוב CSS למרכז, יישור לימין והודעת יום הולדת
-st.markdown("""
-    <style>
-    .main { direction: rtl; text-align: right; }
-    .birthday-center {
-        text-align: center;
-        font-size: 50px;
-        font-weight: bold;
-        color: #FF4B4B;
-        padding: 30px;
-        border: 10px double #FF4B4B;
-        border-radius: 30px;
-        margin: 40px auto;
-        width: 80%;
-        background-color: #FFF5F5;
-    }
-    div[data-testid="stExpander"] {
-        background-color: #f0f2f6;
-        border-radius: 10px;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-
-SHEET_URL = "https://docs.google.com/spreadsheets/d/1dIJIgpiND9yj4mWPZNxDwZaQyxDqAATH6Lp_TLFXmwI/export?format=csv"
+# חיבור לגוגל שיטס
+conn = st.connection("gsheets", type=GSheetsConnection)
 
 def get_zodiac(d, m):
     if (m == 3 and d >= 21) or (m == 4 and d <= 19): return "טלה ♈"
@@ -45,92 +24,69 @@ def get_zodiac(d, m):
     if (m == 1 and d >= 20) or (m == 2 and d <= 18): return "דלי ♒"
     return "דגים ♓"
 
-def process_data(df):
-    today = date.today()
-    full_data = []
-    celebrants_today = []
-    
-    for _, row in df.iterrows():
-        try:
-            bday_dt = pd.to_datetime(row['Birthday'], dayfirst=True)
-            bday = bday_dt.date()
-            age = today.year - bday.year
-            
-            if bday.day == today.day and bday.month == today.month:
-                celebrants_today.append(f"{row['Full_Name']} (חוגג/ת {age})")
-
-            h_date = dates.HebrewDate.from_pydate(bday)
-            
-            this_year_bday = bday.replace(year=today.year)
-            if this_year_bday < today:
-                this_year_bday = this_year_bday.replace(year=today.year + 1)
-            days_left = (this_year_bday - today).days
-
-            full_data.append({
-                "שם": row['Full_Name'],
-                "תאריך לועזי": bday.strftime('%d/%m/%Y'),
-                "יום": bday.day,
-                "חודש": bday.month,
-                "תאריך עברי": h_date.hebrew_date_string(),
-                "מזל": get_zodiac(bday.day, bday.month),
-                "ימים שנותרו": days_left,
-                "גיל": age
-            })
-        except: continue
-    return pd.DataFrame(full_data), celebrants_today
-
 # טעינת נתונים
-if 'df_main' not in st.session_state:
-    try:
-        st.session_state.df_main = pd.read_csv(SHEET_URL)
-    except:
-        st.session_state.df_main = pd.DataFrame(columns=['Full_Name', 'Birthday'])
+df_existing = conn.read(ttl=0) # ttl=0 אומר שזה תמיד יקרא נתונים טריים
+df_existing = df_existing.dropna(how="all")
 
-# עיבוד
-report_df, celebrants = process_data(st.session_state.df_main)
+# עיבוד נתונים לתצוגה
 today = date.today()
+processed_list = []
+celebrants_today = []
+
+for _, row in df_existing.iterrows():
+    try:
+        b_dt = pd.to_datetime(row['Birthday'], dayfirst=True)
+        b_date = b_dt.date()
+        age = today.year - b_date.year
+        
+        if b_date.day == today.day and b_date.month == today.month:
+            celebrants_today.append(f"{row['Full_Name']} (חוגג/ת {age})")
+            
+        h_date = dates.HebrewDate.from_pydate(b_date)
+        
+        this_year = b_date.replace(year=today.year)
+        if this_year < today: this_year = this_year.replace(year=today.year + 1)
+        days_left = (this_year - today).days
+        
+        processed_list.append({
+            "שם": row['Full_Name'],
+            "תאריך לועזי": b_date.strftime('%d/%m/%Y'),
+            "יום": b_date.day,
+            "חודש": b_date.month,
+            "תאריך עברי": h_date.hebrew_date_string(),
+            "מזל": get_zodiac(b_date.day, b_date.month),
+            "ימים שנותרו": days_left,
+            "גיל": age
+        })
+    except: continue
+
+report_df = pd.DataFrame(processed_list)
 
 # --- תצוגה ---
 st.title("🎂 מערכת ימי הולדת משפחתית")
 
-# 1. חוגגי היום (במרכז)
-if celebrants:
+if celebrants_today:
     st.balloons()
-    names_text = "<br>".join(celebrants)
-    st.markdown(f'<div class="birthday-center">🎉 מזל טוב! 🎉<br>{names_text}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div style="text-align:center; font-size:50px; border:10px double #FF4B4B; padding:20px; border-radius:30px; background-color:#FFF5F5; color:#FF4B4B;">🎉 מזל טוב! 🎉<br>{"<br>".join(celebrants_today)}</div>', unsafe_allow_html=True)
 
-# 2. טבלת החודש (רק מי שטרם חגג)
-st.subheader(f"📅 נותרו לחגוג החודש (חודש {today.month})")
-current_month_future = report_df[
-    (report_df['חודש'] == today.month) & 
-    (report_df['יום'] >= today.day)
-].sort_values("יום")
+st.subheader(f"📅 נותרו לחגוג החודש")
+current_month = report_df[(report_df['חודש'] == today.month) & (report_df['יום'] >= today.day)].sort_values("יום")
+st.dataframe(current_month[["שם", "תאריך לועזי", "תאריך עברי", "ימים שנותרו", "גיל"]], use_container_width=True, hide_index=True)
 
-if not current_month_future.empty:
-    st.dataframe(
-        current_month_future[["שם", "תאריך לועזי", "תאריך עברי", "ימים שנותרו", "גיל"]],
-        use_container_width=True,
-        hide_index=True
-    )
-else:
-    st.info("אין יותר ימי הולדת החודש. נתראה בחודש הבא! 🎈")
+st.subheader("📋 רשימה מלאה")
+st.dataframe(report_df[["שם", "תאריך לועזי", "תאריך עברי", "מזל", "גיל"]], use_container_width=True, hide_index=True)
 
-# 3. רשימה כללית
-st.subheader("📋 רשימת החוגגים המלאה")
-st.dataframe(report_df[["שם", "תאריך לועזי", "תאריך עברי", "מזל", "גיל"]], 
-             use_container_width=True, hide_index=True)
-
-st.write("---") # קו מפריד
-
-# 4. הוספת חוגג (בתחתית הדף)
-with st.expander("➕ הוספת חוגג חדש לרשימה"):
-    c1, c2, c3 = st.columns([2, 2, 1])
-    with c1: new_name = st.text_input("שם מלא:")
-    with c2: new_date = st.date_input("תאריך לידה:", min_value=date(1940, 1, 1), value=date(1990, 1, 1))
-    with c3:
-        if st.button("הוסף"):
-            new_row = pd.DataFrame({'Full_Name': [new_name], 'Birthday': [new_date.strftime('%d/%m/%Y')]})
-            st.session_state.df_main = pd.concat([st.session_state.df_main, new_row], ignore_index=True)
-            st.success("החוגג נוסף!")
+# --- הוספת חוגג ועדכון הגליון ---
+st.write("---")
+with st.expander("➕ הוספת חוגג חדש (נשמר באקסל)"):
+    with st.form("add_form", clear_on_submit=True):
+        name = st.text_input("שם מלא:")
+        b_date_input = st.date_input("תאריך לידה:", value=date(1990, 1, 1))
+        submit = st.form_submit_button("שמור באקסל")
+        
+        if submit and name:
+            new_row = pd.DataFrame([{"Full_Name": name, "Birthday": b_date_input.strftime("%d/%m/%Y")}])
+            updated_df = pd.concat([df_existing, new_row], ignore_index=True)
+            conn.update(data=updated_df) # פקודת הקסם שמעדכנת את גוגל!
+            st.success(f"החוגג {name} נשמר בגליון!")
             st.rerun()
-
