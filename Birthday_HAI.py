@@ -107,7 +107,11 @@ current_month_future = report_df[
 ].sort_values("יום")
 
 if not current_month_future.empty:
-    st.table(current_month_future[["שם", "תאריך לועזי", "תאריך עברי", "ימים שנותרו", "גיל"]])
+    st.dataframe(
+        current_month_future[["שם", "תאריך לועזי", "תאריך עברי", "ימים שנותרו", "גיל"]],
+        use_container_width=True,
+        hide_index=True
+    )
 else:
     st.info("אין יותר ימי הולדת החודש. נתראה בחודש הבא! 🎈")
 
@@ -129,3 +133,4 @@ with st.expander("➕ הוספת חוגג חדש לרשימה"):
             st.session_state.df_main = pd.concat([st.session_state.df_main, new_row], ignore_index=True)
             st.success("החוגג נוסף!")
             st.rerun()
+
