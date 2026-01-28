@@ -75,3 +75,4 @@ try:
 except Exception as e:
     st.error(f"שגיאה בעיבוד הנתונים: {e}")
 
+
