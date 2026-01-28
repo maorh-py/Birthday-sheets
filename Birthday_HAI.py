@@ -7,7 +7,7 @@ from pyluach import dates
 # הגדרות דף
 st.set_page_config(page_title="ניהול ימי הולדת חכם", layout="wide")
 
-# עיצוב CSS
+# עיצוב CSS למרכז ויישור לימין
 st.markdown("""
     <style>
     .main { direction: rtl; text-align: right; }
@@ -37,10 +37,7 @@ def get_zodiac(d, m):
     return "דגים ♓"
 
 # קריאת נתונים
-try:
-    df_raw = conn.read(ttl=0).dropna(how="all")
-except:
-    df_raw = pd.DataFrame(columns=['Full_Name', 'Birthday'])
+df_raw = conn.read(ttl=0).dropna(how="all")
 
 today = date.today()
 processed = []
@@ -48,22 +45,19 @@ celebrants_today = []
 
 for _, row in df_raw.iterrows():
     try:
-        # ניקוי נתונים בסיסי
-        name = str(row['Full_Name'])
-        b_str = str(row['Birthday'])
-        b_dt = pd.to_datetime(b_str, dayfirst=True)
+        b_dt = pd.to_datetime(row['Birthday'], dayfirst=True)
         b_date = b_dt.date()
-        
         age = today.year - b_date.year
+        
         if b_date.day == today.day and b_date.month == today.month:
-            celebrants_today.append(f"{name} (חוגג/ת {age})")
+            celebrants_today.append(f"{row['Full_Name']} (חוגג/ת {age})")
             
         h_date = dates.HebrewDate.from_pydate(b_date)
         this_year = b_date.replace(year=today.year)
         if this_year < today: this_year = this_year.replace(year=today.year + 1)
         
         processed.append({
-            "שם": name,
+            "שם": row['Full_Name'],
             "תאריך לועזי": b_date.strftime('%d/%m/%Y'),
             "יום": b_date.day,
             "חודש": b_date.month,
@@ -77,7 +71,7 @@ for _, row in df_raw.iterrows():
 report_df = pd.DataFrame(processed)
 
 # --- תצוגה ---
-st.title("🎂 מערכת ימי הולדת משפחתית")
+st.title("🎂 ניהול ימי הולדת חכם")
 
 if celebrants_today:
     st.balloons()
@@ -93,18 +87,19 @@ if not report_df.empty:
     st.dataframe(report_df[["שם", "תאריך לועזי", "תאריך עברי", "מזל", "גיל"]], use_container_width=True, hide_index=True)
 
 st.write("---")
-# הוספת חוגג
+# הוספת חוגג - בתחתית
 with st.expander("➕ הוספת חוגג חדש (נשמר בגליון)"):
     with st.form("add_form", clear_on_submit=True):
         new_name = st.text_input("שם מלא:")
         new_bday = st.date_input("תאריך לידה:", value=date(1990, 1, 1))
         if st.form_submit_button("שמור באקסל"):
             if new_name:
-                # יצירת שורה חדשה בפורמט נקי
-                new_row = pd.DataFrame([{"Full_Name": new_name, "Birthday": new_bday.strftime("%d/%m/%Y")}])
-                # חיבור ועדכון
-                updated_df = pd.concat([df_raw, new_row], ignore_index=True)
-                # שימוש בפרמטרים נוספים כדי למנוע שגיאות כתיבה
+                # יצירת שורה חדשה
+                new_entry = pd.DataFrame([{"Full_Name": new_name, "Birthday": new_bday.strftime("%d/%m/%Y")}])
+                # עדכון הדאטה-פריים הקיים
+                updated_df = pd.concat([df_raw, new_entry], ignore_index=True)
+                # כתיבה מחדש לגליון
                 conn.update(data=updated_df)
+                st.cache_data.clear() # ניקוי זיכרון כדי לראות את השינוי מיד
                 st.success(f"החוגג {new_name} נשמר!")
                 st.rerun()
