@@ -2,7 +2,15 @@ import streamlit as st
 import pandas as pd
 from datetime import date
 from pyluach import dates
-from st_gsheets_connection import GSheetsConnection
+
+# תיקון שורה 5: ניסיון ייבוא גמיש כדי למנוע שגיאות שרת
+try:
+    from streamlit_gsheets import GSheetsConnection
+except ImportError:
+    try:
+        from st_gsheets_connection import GSheetsConnection
+    except ImportError:
+        st.error("שגיאה: חסרה ספריית החיבור לגוגל שיטס. וודא ש-st-gsheets-connection מופיע ב-requirements.txt")
 
 # הגדרות דף
 st.set_page_config(page_title="לוח ימי הולדת משפחתי", layout="centered")
@@ -34,8 +42,11 @@ st.title("🎂 לוח ימי הולדת משפחתי")
 
 # --- חלק 1: תצוגת הרשימה הקבועה ---
 try:
+    # יצירת החיבור
     conn = st.connection("gsheets", type=GSheetsConnection)
     url = st.secrets["connections"]["gsheets"]["spreadsheet"]
+    
+    # קריאת הנתונים
     df_raw = conn.read(ttl=0).dropna(how="all")
     
     if not df_raw.empty:
@@ -46,22 +57,26 @@ try:
                 processed_list.append(process_person(row['Full_Name'], b_date))
             except: continue
         
-        st.subheader("📋 רשימת החוגגים")
-        st.dataframe(pd.DataFrame(processed_list), use_container_width=True, hide_index=True)
-except Exception:
-    st.info("ממתין לנתונים מהאקסל...")
+        if processed_list:
+            st.subheader("📋 רשימת החוגגים")
+            st.dataframe(pd.DataFrame(processed_list), use_container_width=True, hide_index=True)
+except Exception as e:
+    st.info("מתחבר לנתונים... (אם מופיעה שגיאה, וודא שהגדרת Secrets כראוי)")
 
 st.markdown("---")
 
-# --- חלק 2: הוספה קבועה (קישור) ---
+# --- חלק 2: הוספה קבועה (אחד מתחת לשני) ---
 st.subheader("📌 הוספה קבועה")
 st.write("כדי להוסיף חוגג שיופיע כאן תמיד, יש להוסיף אותו לקובץ האקסל:")
-st.link_button("🔗 פתח אקסל להוספה קבועה", url)
+if 'url' in locals():
+    st.link_button("🔗 פתח אקסל להוספה קבועה", url)
+else:
+    st.warning("קישור לאקסל לא נמצא ב-Secrets")
 st.caption("לאחר השמירה באקסל, רענן את הדף הזה.")
 
 st.markdown("---")
 
-# --- חלק 3: הוספה זמנית (סימולטור) ---
+# --- חלק 3: הוספה זמנית ---
 st.subheader("⏱️ הוספה זמנית")
 st.info("כאן אפשר לבדוק מזל וגיל בלי לשמור את הנתונים.")
 with st.form("temp_add", clear_on_submit=True):
@@ -74,6 +89,7 @@ with st.form("temp_add", clear_on_submit=True):
             res = process_person(t_name, t_bday)
             st.success(f"**תוצאה זמנית עבור {res['שם']}:**")
             st.write(f"גיל: {res['גיל']} | מזל: {res['מזל']} | תאריך עברי: {res['תאריך עברי']}")
+            st.balloons()
             st.warning("שים לב: המידע לא נשמר ויימחק ברענון.")
         else:
             st.error("נא להזין שם כדי לבצע בדיקה.")
