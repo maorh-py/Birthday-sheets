@@ -17,8 +17,8 @@ def get_zodiac(d, m):
         if (m==sm and d>=sd) or (m==em and d<=ed): return n
     return "דגים ♓"
 
-# פונקציה לעיבוד שורה (חישוב גיל, עברי ומזל)
-def process_birthday(name, bday_date):
+# פונקציה לעיבוד נתונים
+def process_person(name, bday_date):
     today = date.today()
     h_date = dates.HebrewDate.from_pydate(bday_date)
     age = today.year - bday_date.year - ((today.month, today.day) < (bday_date.month, bday_date.day))
@@ -30,46 +30,50 @@ def process_birthday(name, bday_date):
         "גיל": age
     }
 
-# חיבור וקריאת נתונים
+# חיבור וקריאת נתונים (קריאה תמיד עובדת!)
 conn = st.connection("gsheets", type=GSheetsConnection)
-url = st.secrets["connections"]["gsheets"]["spreadsheet"]
+spreadsheet_url = st.secrets["connections"]["gsheets"]["spreadsheet"]
 
 st.title("🎂 לוח ימי הולדת משפחתי")
 
+# הצגת נתונים קיימים מהאקסל
 try:
     df_raw = conn.read(ttl=0).dropna(how="all")
-    processed_data = []
-    for _, row in df_raw.iterrows():
-        try:
-            dt = pd.to_datetime(row['Birthday'], dayfirst=True).date()
-            processed_data.append(process_birthday(row['Full_Name'], dt))
-        except: continue
-    
-    if processed_data:
-        st.subheader("📋 רשימת החוגגים")
-        st.dataframe(pd.DataFrame(processed_data), use_container_width=True, hide_index=True)
+    if not df_raw.empty:
+        processed_list = []
+        for _, row in df_raw.iterrows():
+            try:
+                # המרה של התאריך מהאקסל
+                b_date = pd.to_datetime(row['Birthday'], dayfirst=True).date()
+                processed_list.append(process_person(row['Full_Name'], b_date))
+            except: continue
+        
+        if processed_list:
+            st.subheader("📋 רשימת החוגגים הקבועה")
+            st.dataframe(pd.DataFrame(processed_list), use_container_width=True, hide_index=True)
     else:
-        st.info("הרשימה באקסל ריקה.")
-except:
-    st.error("לא הצלחתי להתחבר לאקסל. וודא שהקישור ב-Secrets תקין.")
+        st.info("הרשימה באקסל ריקה כרגע.")
+except Exception as e:
+    st.error("לא הצלחתי למשוך נתונים מהאקסל. וודא שהכותרות באקסל הן Full_Name ו-Birthday.")
 
 st.write("---")
 
-# אזור הוספה (זמני + קבוע)
+# אזור הוספה ובדיקה
 col1, col2 = st.columns(2)
 
 with col1:
     st.subheader("🔍 בדיקה מהירה (לא נשמר)")
-    with st.form("temp_add"):
-        t_name = st.text_input("שם החוגג:")
+    with st.form("temp_check"):
+        t_name = st.text_input("שם לבדיקה:")
         t_bday = st.date_input("תאריך לידה:", value=date(1990,1,1), min_value=date(1920,1,1))
-        if st.form_submit_button("חשב מזל וגיל"):
-            res = process_birthday(t_name, t_bday)
-            st.success(f"תוצאה: {res['שם']} בן/בת {res['גיל']}, מזל {res['מזל']}, תאריך עברי: {res['תאריך עברי']}")
-            st.warning("⚠️ שים לב: המידע הזה לא נשמר באקסל.")
+        if st.form_submit_button("בדוק גיל ומזל"):
+            res = process_person(t_name, t_bday)
+            st.success(f"התוצאה עבור {res['שם']}:")
+            st.write(f"גיל: {res['גיל']} | מזל: {res['מזל']} | עברי: {res['תאריך עברי']}")
+            st.info("☝️ שים לב: המידע הזה יוצג כאן זמנית ולא יישמר בקובץ.")
 
 with col2:
-    st.subheader("📌 הוספה קבועה")
-    st.write("כדי להוסיף חוגג לרשימה הקבועה, יש להוסיף אותו ישירות לקובץ האקסל:")
-    st.link_button("🔗 פתח אקסל להוספת חוגג", url)
-    st.info("לאחר ההוספה באקסל, רענן את הדף הזה כדי לראות את השינויים.")
+    st.subheader("📌 הוספה קבועה לרשימה")
+    st.write("כדי להוסיף חוגג שיופיע כאן תמיד, יש להוסיף אותו ידנית לקובץ האקסל:")
+    st.link_button("🔗 פתח קובץ אקסל לעריכה", spreadsheet_url)
+    st.caption("לאחר ההוספה באקסל, פשוט רענן את הדף הזה.")
