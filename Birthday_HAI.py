@@ -6,6 +6,9 @@ from pyluach import dates
 # הגדרות דף
 st.set_page_config(page_title="לוח ימי הולדת משפחתי", layout="centered")
 
+# CSS בסיסי לוודא שהטבלה נראית טוב
+st.markdown("""<style> [data-testid="stTable"] { width: 100%; } </style>""", unsafe_allow_html=True)
+
 try:
     from st_gsheets_connection import GSheetsConnection
 except ImportError:
@@ -26,10 +29,8 @@ def process_person(name, bday_date, is_temporary=False):
     next_bday = bday_date.replace(year=today.year)
     if next_bday < today:
         next_bday = next_bday.replace(year=today.year + 1)
-    
     days_left = (next_bday - today).days
     age = today.year - bday_date.year - ((today.month, today.day) < (bday_date.month, bday_date.day))
-    
     return {
         "שם": name,
         "תאריך לועזי": bday_date.strftime('%d/%m/%Y'),
@@ -45,7 +46,7 @@ def process_person(name, bday_date, is_temporary=False):
 if "temp_people" not in st.session_state:
     st.session_state.temp_people = []
 
-all_people = []
+all_data = []
 spreadsheet_url = ""
 
 # טעינת נתונים
@@ -56,23 +57,20 @@ try:
     for _, row in df_raw.iterrows():
         try:
             b_date = pd.to_datetime(row['Birthday'], dayfirst=True).date()
-            all_people.append(process_person(row['Full_Name'], b_date))
+            all_data.append(process_person(row['Full_Name'], b_date))
         except: continue
 except: pass
 
-all_people.extend(st.session_state.temp_people)
+all_data.extend(st.session_state.temp_people)
 today = date.today()
 
-# --- CSS להעלמת עמודת האינדקס בטבלאות ---
-st.markdown("""
-    <style>
-    thead tr th:first-child { display:none !important; }
-    tbody tr td:first-child { display:none !important; }
-    </style>
-    """, unsafe_allow_html=True)
+# פונקציית צביעה פשוטה שעובדת על המערך החדש
+def apply_style(row):
+    color = 'background-color: #ffffd1' if row["זמני"] else ''
+    return [color] * len(row)
 
 # --- 1. חגיגות היום ---
-hbd_today = [p for p in all_people if p["חודש"] == today.month and p["יום"] == today.day]
+hbd_today = [p for p in all_data if p["חודש"] == today.month and p["יום"] == today.day]
 if hbd_today:
     st.balloons()
     for p in hbd_today:
@@ -80,30 +78,22 @@ if hbd_today:
             <div style="background-color: #ffffff; padding: 25px; border-radius: 20px; text-align: center; 
                         border: 3px solid #f0f2f6; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 30px;">
                 <h3 style="color: #ff4b4b; margin: 0; font-size: 24px;">🎈 מזל טוב 🎈</h3>
-                <h1 style="color: #1f1f1f; margin: 10px 0; font-size: 45px;">
-                    🎁 {p['שם']} 🎁
-                </h1>
+                <h1 style="color: #1f1f1f; margin: 10px 0; font-size: 45px;">🎁 {p['שם']} 🎁</h1>
                 <h2 style="color: #ff4b4b; margin: 0;">חוגג/ת היום {p['גיל']} שנים! 🎂</h2>
             </div>
         """, unsafe_allow_html=True)
 
-# פונקציית צביעה
-def color_yellow(row):
-    return ['background-color: #ffffd1' if row.זמני else '' for _ in row]
-
 # --- 2. טבלת החודש ---
 st.header(f"📅 חגיגות קרובות לחודש זה")
-this_month = [p for p in all_people if p["חודש"] == today.month and p["יום"] >= today.day]
+this_month = [p for p in all_data if p["חודש"] == today.month and p["יום"] >= today.day]
 if this_month:
     df_m = pd.DataFrame(sorted(this_month, key=lambda x: x["יום"]))
+    # אנחנו מושכים רק את העמודות שצריך + עמודת 'זמני' לצורך העיצוב
+    view_m = df_m[["שם", "תאריך לועזי", "גיל", "ימים ליום הולדת", "זמני"]]
     
-    # הצגת העמודות המבוקשות בלבד
-    cols_m = ["שם", "תאריך לועזי", "גיל", "ימים ליום הולדת"]
-    # אנחנו צובעים לפני שמורידים את עמודת ה'זמני' כדי שהמערכת תדע את מי לצבוע
-    styled_m = df_m.style.apply(color_yellow, axis=1)
-    
-    # כאן הסוד: אנחנו מציגים רק את העמודות שרצינו מה-Styler
-    st.write(styled_m.hide(axis="index").hide(subset=["זמני", "תאריך עברי", "מזל", "חודש", "יום"], axis="columns"))
+    st.table(view_m.style.apply(apply_style, axis=1)
+             .hide(axis="index")
+             .hide(axis="columns", subset=["זמני"]))
 else:
     st.info("אין חגיגות נוספות החודש.")
 
@@ -111,13 +101,14 @@ st.markdown("---")
 
 # --- 3. רשימת כל החוגגים ---
 st.header("📊 רשימת כל החוגגים")
-if all_people:
-    df_all = pd.DataFrame(sorted(all_people, key=lambda x: (x["חודש"], x["יום"])))
+if all_data:
+    df_all = pd.DataFrame(sorted(all_data, key=lambda x: (x["חודש"], x["יום"])))
+    # מושכים רק את העמודות שצריך + עמודת 'זמני' לצורך העיצוב
+    view_all = df_all[["שם", "תאריך לועזי", "תאריך עברי", "מזל", "גיל", "זמני"]]
     
-    # הצגת העמודות המבוקשות בלבד
-    styled_all = df_all.style.apply(color_yellow, axis=1)
-    
-    st.write(styled_all.hide(axis="index").hide(subset=["זמני", "ימים ליום הולדת", "חודש", "יום"], axis="columns"))
+    st.table(view_all.style.apply(apply_style, axis=1)
+             .hide(axis="index")
+             .hide(axis="columns", subset=["זמני"]))
 
 st.markdown("---")
 
@@ -133,10 +124,7 @@ with col_refresh:
 with st.form("temp_add", clear_on_submit=True):
     c1, c2 = st.columns(2)
     with c1: t_name = st.text_input("שם:")
-    with c2: t_date = st.date_input("תאריך לידה:", 
-                                   value=date(2000, 1, 1),
-                                   min_value=date(1920, 1, 1),
-                                   max_value=today)
+    with c2: t_date = st.date_input("תאריך לידה:", value=date(2000, 1, 1), min_value=date(1920, 1, 1), max_value=today)
     if st.form_submit_button("הוסף זמנית"):
         if t_name:
             st.session_state.temp_people.append(process_person(t_name, t_date, is_temporary=True))
