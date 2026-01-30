@@ -5,7 +5,7 @@ from pyluach import dates
 from streamlit_gsheets import GSheetsConnection
 
 # הגדרות דף
-st.set_page_config(page_title="ניהול ימי הולדת", layout="wide")
+st.set_page_config(page_title="לוח ימי הולדת", layout="wide")
 
 # פונקציית מזלות
 def get_zodiac(d, m):
@@ -17,7 +17,7 @@ def get_zodiac(d, m):
         if (m==sm and d>=sd) or (m==em and d<=ed): return n
     return "דגים ♓"
 
-# פונקציה לעיבוד נתונים
+# פונקציה לעיבוד נתונים (חישוב גיל, עברי ומזל)
 def process_person(name, bday_date):
     today = date.today()
     h_date = dates.HebrewDate.from_pydate(bday_date)
@@ -30,9 +30,8 @@ def process_person(name, bday_date):
         "גיל": age
     }
 
-# חיבור וקריאת נתונים
+# חיבור וקריאת נתונים (קריאה תמיד עובדת עם הקישור שנתת)
 conn = st.connection("gsheets", type=GSheetsConnection)
-# שליפת הקישור מה-Secrets לטובת הכפתור
 spreadsheet_url = st.secrets["connections"]["gsheets"]["spreadsheet"]
 
 st.title("🎂 לוח ימי הולדת משפחתי")
@@ -44,17 +43,18 @@ try:
         processed_list = []
         for _, row in df_raw.iterrows():
             try:
+                # המרה של התאריך מהאקסל
                 b_date = pd.to_datetime(row['Birthday'], dayfirst=True).date()
                 processed_list.append(process_person(row['Full_Name'], b_date))
             except: continue
         
         if processed_list:
-            st.subheader("📋 רשימת החוגגים")
+            st.subheader("📋 רשימת החוגגים הקבועה")
             st.dataframe(pd.DataFrame(processed_list), use_container_width=True, hide_index=True)
     else:
         st.info("הרשימה באקסל ריקה כרגע.")
 except:
-    st.error("לא הצלחתי למשוך נתונים. וודא שהקישור ב-Secrets תקין והכותרות באקסל הן Full_Name ו-Birthday.")
+    st.error("לא הצלחתי למשוך נתונים. וודא שהכותרות באקסל הן Full_Name ו-Birthday.")
 
 st.write("---")
 
@@ -76,5 +76,6 @@ with col1:
 with col2:
     st.subheader("📌 הוספה קבועה")
     st.write("כדי להוסיף חוגג שיופיע ברשימה תמיד, יש להוסיף אותו ישירות לקובץ האקסל:")
+    # שימוש בקישור מה-Secrets ליצירת כפתור מעבר
     st.link_button("🔗 פתח את הקובץ להוספת חוגג", spreadsheet_url)
     st.info("לאחר ההוספה ושמירה באקסל, רענן את הדף הזה.")
