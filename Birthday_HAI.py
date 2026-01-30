@@ -34,9 +34,6 @@ def process_person(name, bday_date, is_temporary=False):
         "תאריך עברי": h_date.hebrew_date_string(),
         "מזל": get_zodiac(bday_date.day, bday_date.month),
         "גיל": age,
-        "ימים ליום הולדת": days_left,
-        "חודש": bday_date.month,
-        "יום": bday_date.day,
     }
 
 if "temp_people" not in st.session_state:
@@ -137,4 +134,5 @@ st.markdown("---")
 # --- 5. הוספה קבועה ---
 st.subheader("📌 הוספה קבועה")
 if url: st.link_button("🔗 פתח אקסל לעריכה קבועה", url)
+
 
