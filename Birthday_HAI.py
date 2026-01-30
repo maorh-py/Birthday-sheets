@@ -3,10 +3,9 @@ import pandas as pd
 from datetime import date
 from pyluach import dates
 
-# הגדרות דף - centered שומר על טבלאות ברוחב קריא ונעים
+# הגדרות דף
 st.set_page_config(page_title="לוח ימי הולדת משפחתי", layout="centered")
 
-# מנגנון ייבוא גמיש למניעת שגיאות
 try:
     from st_gsheets_connection import GSheetsConnection
 except ImportError:
@@ -60,7 +59,7 @@ except: pass
 all_people.extend(st.session_state.temp_people)
 today = date.today()
 
-# --- 1. חגיגות היום (עיצוב לבן נקי) ---
+# --- 1. חגיגות היום ---
 hbd_today = [p for p in all_people if p["חודש"] == today.month and p["יום"] == today.day]
 if hbd_today:
     st.balloons()
@@ -76,18 +75,14 @@ if hbd_today:
             </div>
         """, unsafe_allow_html=True)
 
-# פונקציית עיצוב צהוב לזמניים - תיקון לשגיאת ה-AttributeError
+# פונקציית עיצוב צהוב לזמניים
 def style_rows(df):
     styles = pd.DataFrame('', index=df.index, columns=df.columns)
-    # צובע רק אם עמודת 'זמני' קיימת והיא True
     if 'זמני' in df.columns:
         for i, row in df.iterrows():
             if row['זמני']:
                 styles.loc[i] = 'background-color: #ffffd1'
     return styles
-
-# רשימת עמודות לתצוגה בלבד
-cols_to_show = ["שם", "תאריך לידה", "גיל", "מזל", "תאריך עברי", "ימים ליומולדת"]
 
 # --- 2. טבלת החודש ---
 st.header(f"📅 חגיגות קרובות לחודש זה")
@@ -96,10 +91,12 @@ this_month = sorted(this_month, key=lambda x: x["יום"])
 
 if this_month:
     df_m = pd.DataFrame(this_month)
-    # מחיל עיצוב ומסתיר עמודות עזר בסוף
-    st.table(df_m.style.apply(style_rows, axis=None).hide(axis="columns", subset=["חודש", "יום", "זמני"]))
+    # הצגת טבלה ללא אינדקס וללא עמודות עזר
+    st.table(df_m.style.apply(style_rows, axis=None)
+             .hide(axis="index")
+             .hide(axis="columns", subset=["חודש", "יום", "זמני"]))
 else:
-    st.info("אין חגיגות נוספות לחודש זה.")
+    st.info("אין חגיגות נוספות המתוכננות לחודש זה.")
 
 st.markdown("---")
 
@@ -108,7 +105,10 @@ st.header("📊 רשימת כל החוגגים")
 if all_people:
     all_sorted = sorted(all_people, key=lambda x: (x["חודש"], x["יום"]))
     df_all = pd.DataFrame(all_sorted)
-    st.table(df_all.style.apply(style_rows, axis=None).hide(axis="columns", subset=["חודש", "יום", "זמני"]))
+    # הצגת טבלה ללא אינדקס וללא עמודות עזר
+    st.table(df_all.style.apply(style_rows, axis=None)
+             .hide(axis="index")
+             .hide(axis="columns", subset=["חודש", "יום", "זמני"]))
 
 st.markdown("---")
 
@@ -124,7 +124,11 @@ with col_refresh:
 with st.form("temp_add", clear_on_submit=True):
     c1, c2 = st.columns(2)
     with c1: t_name = st.text_input("שם:")
-    with c2: t_date = st.date_input("תאריך לידה:", value=date(2000,1,1))
+    # הגדרת טווח שנים מ-1920 ועד היום
+    with c2: t_date = st.date_input("תאריך לידה:", 
+                                   value=date(2000, 1, 1),
+                                   min_value=date(1920, 1, 1),
+                                   max_value=today)
     if st.form_submit_button("הוסף זמנית"):
         if t_name:
             st.session_state.temp_people.append(process_person(t_name, t_date, is_temporary=True))
