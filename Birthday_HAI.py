@@ -3,7 +3,7 @@ import pandas as pd
 from datetime import date
 from pyluach import dates
 
-# הגדרות דף - layout='centered' שומר על טבלאות ברוחב קריא ונעים
+# הגדרות דף - centered שומר על טבלאות ברוחב קריא ונעים
 st.set_page_config(page_title="לוח ימי הולדת משפחתי", layout="centered")
 
 # מנגנון ייבוא גמיש
@@ -60,22 +60,22 @@ except: pass
 all_people.extend(st.session_state.temp_people)
 today = date.today()
 
-# --- 1. חגיגות היום (עיצוב לבן עם מתנות) ---
+# --- 1. חגיגות היום (עם "מזל טוב" מעל השם) ---
 hbd_today = [p for p in all_people if p["חודש"] == today.month and p["יום"] == today.day]
 if hbd_today:
     st.balloons()
     for p in hbd_today:
         st.markdown(f"""
-            <div style="background-color: #ffffff; padding: 20px; border-radius: 20px; text-align: center; 
+            <div style="background-color: #ffffff; padding: 25px; border-radius: 20px; text-align: center; 
                         border: 3px solid #f0f2f6; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 30px;">
-                <h1 style="color: #1f1f1f; margin: 0; font-size: 40px;">
+                <p style="color: #ff4b4b; font-size: 28px; font-weight: bold; margin-bottom: 5px;">🎈 מזל טוב! 🎈</p>
+                <h1 style="color: #1f1f1f; margin: 0; font-size: 45px;">
                     🎁 {p['שם']} 🎁
                 </h1>
                 <h2 style="color: #ff4b4b; margin: 10px 0 0 0;">חוגג/ת היום {p['גיל']} שנים! 🎂</h2>
             </div>
         """, unsafe_allow_html=True)
 
-# פונקציית צביעת שורות זמניות
 def style_temp(row):
     return ['background-color: #ffffd1' if row.זמני else '' for _ in row]
 
@@ -88,18 +88,18 @@ this_month = sorted(this_month, key=lambda x: x["יום"])
 
 if this_month:
     df_m = pd.DataFrame(this_month)
-    st.table(df_m[display_cols + ["זמני"]].style.apply(style_temp, axis=1))
+    st.table(df_m[display_cols].style.apply(style_temp, axis=1))
 else:
     st.info("אין חגיגות נוספות לחודש זה.")
 
 st.markdown("---")
 
-# --- 3. טבלה כללית (החזרתי אותה לכאן כטבלה רגילה) ---
+# --- 3. טבלה כללית ---
 st.header("📊 רשימת כל החוגגים")
 if all_people:
     all_sorted = sorted(all_people, key=lambda x: (x["חודש"], x["יום"]))
     df_all = pd.DataFrame(all_sorted)
-    st.table(df_all[display_cols + ["זמני"]].style.apply(style_temp, axis=1))
+    st.table(df_all[display_cols].style.apply(style_temp, axis=1))
 
 st.markdown("---")
 
