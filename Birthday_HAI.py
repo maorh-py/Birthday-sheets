@@ -4,7 +4,7 @@ from datetime import date
 from pyluach import dates
 
 # הגדרות דף
-st.set_page_config(page_title="לוח ימי הולדת משפחתי", layout="centered")
+st.set_page_config(page_title="לוח ימי הולדת משפחתי", layout="centered")# הגדרת דפדפן ומרכוז התוכן   
 
 # CSS לניקוי הטבלה (העלמת אינדקס)
 st.markdown("""
@@ -134,3 +134,4 @@ st.markdown("---")
 # --- 5. הוספה קבועה ---
 st.subheader("📌 הוספה קבועה")
 if spreadsheet_url: st.link_button("🔗 פתח אקסל לעריכה קבועה", spreadsheet_url)
+
