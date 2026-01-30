@@ -63,6 +63,14 @@ except: pass
 all_people.extend(st.session_state.temp_people)
 today = date.today()
 
+# --- CSS להעלמת עמודת האינדקס בטבלאות ---
+st.markdown("""
+    <style>
+    thead tr th:first-child { display:none !important; }
+    tbody tr td:first-child { display:none !important; }
+    </style>
+    """, unsafe_allow_html=True)
+
 # --- 1. חגיגות היום ---
 hbd_today = [p for p in all_people if p["חודש"] == today.month and p["יום"] == today.day]
 if hbd_today:
@@ -79,7 +87,7 @@ if hbd_today:
             </div>
         """, unsafe_allow_html=True)
 
-# פונקציית צביעה פשוטה
+# פונקציית צביעה
 def color_yellow(row):
     return ['background-color: #ffffd1' if row.זמני else '' for _ in row]
 
@@ -89,12 +97,13 @@ this_month = [p for p in all_people if p["חודש"] == today.month and p["יו�
 if this_month:
     df_m = pd.DataFrame(sorted(this_month, key=lambda x: x["יום"]))
     
-    # יצירת טבלה חדשה רק עם העמודות שרצית
-    view_m = df_m[["שם", "תאריך לועזי", "גיל", "ימים ליום הולדת", "זמני"]]
+    # הצגת העמודות המבוקשות בלבד
+    cols_m = ["שם", "תאריך לועזי", "גיל", "ימים ליום הולדת"]
+    # אנחנו צובעים לפני שמורידים את עמודת ה'זמני' כדי שהמערכת תדע את מי לצבוע
+    styled_m = df_m.style.apply(color_yellow, axis=1)
     
-    st.table(view_m.style.apply(color_yellow, axis=1)
-             .hide(axis="index")
-             .hide(axis="columns", subset=["זמני"]))
+    # כאן הסוד: אנחנו מציגים רק את העמודות שרצינו מה-Styler
+    st.write(styled_m.hide(axis="index").hide(subset=["זמני", "תאריך עברי", "מזל", "חודש", "יום"], axis="columns"))
 else:
     st.info("אין חגיגות נוספות החודש.")
 
@@ -105,12 +114,10 @@ st.header("📊 רשימת כל החוגגים")
 if all_people:
     df_all = pd.DataFrame(sorted(all_people, key=lambda x: (x["חודש"], x["יום"])))
     
-    # יצירת טבלה חדשה רק עם העמודות שרצית
-    view_all = df_all[["שם", "תאריך לועזי", "תאריך עברי", "מזל", "גיל", "זמני"]]
+    # הצגת העמודות המבוקשות בלבד
+    styled_all = df_all.style.apply(color_yellow, axis=1)
     
-    st.table(view_all.style.apply(color_yellow, axis=1)
-             .hide(axis="index")
-             .hide(axis="columns", subset=["זמני"]))
+    st.write(styled_all.hide(axis="index").hide(subset=["זמני", "ימים ליום הולדת", "חודש", "יום"], axis="columns"))
 
 st.markdown("---")
 
