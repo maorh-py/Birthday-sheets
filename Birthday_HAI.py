@@ -122,3 +122,19 @@ with col_refresh:
         st.rerun()
 
 with st.form("temp_add", clear_on_submit=True):
+    c1, c2 = st.columns(2)
+    with c1: t_name = st.text_input("שם:")
+    with c2: t_date = st.date_input("תאריך לידה:", 
+                                   value=date(2000, 1, 1),
+                                   min_value=date(1920, 1, 1),
+                                   max_value=today)
+    if st.form_submit_button("הוסף זמנית"):
+        if t_name:
+            st.session_state.temp_people.append(process_person(t_name, t_date, is_temporary=True))
+            st.rerun()
+
+st.markdown("---")
+
+# --- 5. הוספה קבועה ---
+st.subheader("📌 הוספה קבועה")
+if url: st.link_button("🔗 פתח אקסל לעריכה קבועה", url)
