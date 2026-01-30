@@ -37,7 +37,6 @@ def process_person(name, bday_date, is_temporary=False):
         "ימים ליום הולדת": days_left,
         "חודש": bday_date.month,
         "יום": bday_date.day,
-        "זמני": is_temporary
     }
 
 if "temp_people" not in st.session_state:
@@ -138,3 +137,4 @@ st.markdown("---")
 # --- 5. הוספה קבועה ---
 st.subheader("📌 הוספה קבועה")
 if url: st.link_button("🔗 פתח אקסל לעריכה קבועה", url)
+
