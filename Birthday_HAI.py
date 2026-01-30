@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 from datetime import date
 from pyluach import dates
-from streamlit_gsheets import GSheetsConnection
+from st_gsheets_connection import GSheetsConnection
 
 # הגדרות דף
 st.set_page_config(page_title="לוח ימי הולדת", layout="wide")
@@ -17,7 +17,7 @@ def get_zodiac(d, m):
         if (m==sm and d>=sd) or (m==em and d<=ed): return n
     return "דגים ♓"
 
-# פונקציית עיבוד נתונים
+# פונקציה לעיבוד נתונים
 def process_person(name, bday_date):
     today = date.today()
     h_date = dates.HebrewDate.from_pydate(bday_date)
@@ -30,13 +30,12 @@ def process_person(name, bday_date):
         "גיל": age
     }
 
-# כותרת האפליקציה
 st.title("🎂 לוח ימי הולדת משפחתי")
 
-# חיבור (קריאה בלבד)
+# חיבור וקריאה מהגליון
 try:
     conn = st.connection("gsheets", type=GSheetsConnection)
-    url = st.secrets["connections"]["gsheets"]["spreadsheet"]
+    spreadsheet_url = st.secrets["connections"]["gsheets"]["spreadsheet"]
     df_raw = conn.read(ttl=0).dropna(how="all")
     
     if not df_raw.empty:
@@ -47,33 +46,31 @@ try:
                 processed_list.append(process_person(row['Full_Name'], b_date))
             except: continue
         
-        st.subheader("📋 רשימת החוגגים הקבועה")
-        st.dataframe(pd.DataFrame(processed_list), use_container_width=True, hide_index=True)
-    else:
-        st.info("הרשימה באקסל ריקה.")
-except Exception as e:
-    st.error(f"שגיאת חיבור: {e}")
-    st.info("וודא שהגדרת את ה-spreadsheet ב-Secrets ושמות העמודות באקסל הם Full_Name ו-Birthday.")
+        if processed_list:
+            st.subheader("📋 רשימת החוגגים הקבועה")
+            st.dataframe(pd.DataFrame(processed_list), use_container_width=True, hide_index=True)
+except Exception:
+    st.info("ממתין לנתונים מהגליון...")
 
 st.write("---")
 
-# אזור הבדיקה והקישור
-col1, col2 = st.columns(2)
+# המבנה החדש: אחד מתחת לשני
+st.subheader("➕ הוספה קבועה לרשימה")
+st.write("כדי להוסיף חוגג שיופיע כאן תמיד, יש להוסיף אותו ישירות לקובץ האקסל:")
+st.link_button("🔗 פתח אקסל להוספת חוגג קבוע", spreadsheet_url)
 
-with col1:
-    st.subheader("🔍 בדיקה מהירה (סימולטור)")
-    with st.form("temp_check"):
-        t_name = st.text_input("שם לבדיקה:")
-        t_bday = st.date_input("תאריך לידה:", value=date(1990,1,1), min_value=date(1920,1,1))
-        if st.form_submit_button("חשב נתונים"):
-            if t_name:
-                res = process_person(t_name, t_bday)
-                st.success(f"תוצאות עבור {res['שם']}: {res['גיל']} שנים, מזל {res['מזל']}, עברי: {res['תאריך עברי']}")
-                st.warning("שים לב: המידע לא נשמר בקובץ.")
+st.write("") # מרווח קטן
 
-with col2:
-    st.subheader("📌 הוספה קבועה")
-    st.write("להוספה קבועה, לחץ על הכפתור והוסף שורה חדשה באקסל:")
-    if 'url' in locals():
-        st.link_button("🔗 פתח אקסל לעריכה", url)
-    st.info("לאחר ההוספה באקסל, רענן את האפליקציה.")
+st.subheader("⏱️ הוספה זמנית (לבדיקה בלבד)")
+with st.form("temp_check", clear_on_submit=True):
+    t_name = st.text_input("שם החוגג:")
+    t_bday = st.date_input("תאריך לידה:", value=date(1990,1,1), min_value=date(1920,1,1))
+    
+    if st.form_submit_button("חשב נתונים"):
+        if t_name:
+            res = process_person(t_name, t_bday)
+            st.success(f"התוצאה עבור {res['שם']}:")
+            st.write(f"**גיל:** {res['גיל']} | **מזל:** {res['מזל']} | **תאריך עברי:** {res['תאריך עברי']}")
+            st.warning("⚠️ שים לב: המידע הזה לא נשמר באקסל וייעלם ברענון הדף.")
+        else:
+            st.error("נא להזין שם.")
