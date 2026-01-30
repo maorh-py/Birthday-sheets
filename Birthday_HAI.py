@@ -60,4 +60,81 @@ all_people.extend(st.session_state.temp_people)
 today = date.today()
 
 # --- 1. חגיגות היום ---
-hbd_today = [p
+hbd_today = [p for p in all_people if p["חודש"] == today.month and p["יום"] == today.day]
+if hbd_today:
+    st.balloons()
+    for p in hbd_today:
+        st.markdown(f"""
+            <div style="background-color: #ffffff; padding: 25px; border-radius: 20px; text-align: center; 
+                        border: 3px solid #f0f2f6; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 30px;">
+                <h3 style="color: #ff4b4b; margin: 0; font-size: 24px;">🎈 מזל טוב 🎈</h3>
+                <h1 style="color: #1f1f1f; margin: 10px 0; font-size: 45px;">
+                    🎁 {p['שם']} 🎁
+                </h1>
+                <h2 style="color: #ff4b4b; margin: 0;">חוגג/ת היום {p['גיל']} שנים! 🎂</h2>
+            </div>
+        """, unsafe_allow_html=True)
+
+# פונקציית עיצוב צהוב לזמניים - בודקת לפי הנתונים המקוריים
+def apply_style(df):
+    colors = pd.DataFrame('', index=df.index, columns=df.columns)
+    for i in df.index:
+        if df.at[i, 'זמני']:
+            colors.loc[i] = 'background-color: #ffffd1'
+    return colors
+
+# --- 2. טבלת החודש ---
+st.header(f"📅 חגיגות קרובות לחודש זה")
+this_month = [p for p in all_people if p["חודש"] == today.month and p["יום"] >= today.day]
+this_month = sorted(this_month, key=lambda x: x["יום"])
+
+if this_month:
+    df_m = pd.DataFrame(this_month)
+    cols_m = ["שם", "תאריך לועזי", "גיל", "ימים ליום הולדת"]
+    # מחילים עיצוב ומסתירים את כל מה שלא ברשימה
+    st.table(df_m.style.apply(apply_style, axis=None)
+             .hide(axis="index")
+             .hide(axis="columns", subset=[c for c in df_m.columns if c not in cols_m]))
+else:
+    st.info("אין חגיגות נוספות המתוכננות לחודש זה.")
+
+st.markdown("---")
+
+# --- 3. רשימת כל החוגגים ---
+st.header("📊 רשימת כל החוגגים")
+if all_people:
+    all_sorted = sorted(all_people, key=lambda x: (x["חודש"], x["יום"]))
+    df_all = pd.DataFrame(all_sorted)
+    cols_all = ["שם", "תאריך לועזי", "תאריך עברי", "מזל", "גיל"]
+    st.table(df_all.style.apply(apply_style, axis=None)
+             .hide(axis="index")
+             .hide(axis="columns", subset=[c for c in df_all.columns if c not in cols_all]))
+
+st.markdown("---")
+
+# --- 4. הוספה זמנית ורענון ---
+col_head, col_refresh = st.columns([0.8, 0.2])
+with col_head:
+    st.subheader("⏱️ הוספה זמנית")
+with col_refresh:
+    if st.button("🔄 רענון"):
+        st.cache_data.clear()
+        st.rerun()
+
+with st.form("temp_add", clear_on_submit=True):
+    c1, c2 = st.columns(2)
+    with c1: t_name = st.text_input("שם:")
+    with c2: t_date = st.date_input("תאריך לידה:", 
+                                   value=date(2000, 1, 1),
+                                   min_value=date(1920, 1, 1),
+                                   max_value=today)
+    if st.form_submit_button("הוסף זמנית"):
+        if t_name:
+            st.session_state.temp_people.append(process_person(t_name, t_date, is_temporary=True))
+            st.rerun()
+
+st.markdown("---")
+
+# --- 5. הוספה קבועה ---
+st.subheader("📌 הוספה קבועה")
+if url: st.link_button("🔗 פתח אקסל לעריכה קבועה", url)
