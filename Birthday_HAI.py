@@ -34,6 +34,10 @@ def process_person(name, bday_date, is_temporary=False):
         "תאריך עברי": h_date.hebrew_date_string(),
         "מזל": get_zodiac(bday_date.day, bday_date.month),
         "גיל": age,
+        "ימים ליום הולדת": days_left,
+        "חודש": bday_date.month,
+        "יום": bday_date.day,
+        "זמני": is_temporary
     }
 
 if "temp_people" not in st.session_state:
@@ -80,31 +84,33 @@ def style_rows(df):
                 styles.loc[i] = 'background-color: #ffffd1'
     return styles
 
-# --- 2. טבלת החודש (שם, לועזי, גיל, ימים ליומולדת) ---
+# --- 2. טבלת החודש ---
+# מציגה: שם, לועזי, גיל, ימים ליום הולדת
 st.header(f"📅 חגיגות קרובות לחודש זה")
 this_month = [p for p in all_people if p["חודש"] == today.month and p["יום"] >= today.day]
 this_month = sorted(this_month, key=lambda x: x["יום"])
 
 if this_month:
     df_m = pd.DataFrame(this_month)
-    cols_m = ["שם", "תאריך לועזי", "גיל", "ימים ליום הולדת"]
+    cols_to_keep_m = ["שם", "תאריך לועזי", "גיל", "ימים ליום הולדת"]
     st.table(df_m.style.apply(style_rows, axis=None)
              .hide(axis="index")
-             .hide(axis="columns", subset=[c for c in df_m.columns if c not in cols_m]))
+             .hide(axis="columns", subset=[c for c in df_m.columns if c not in cols_to_keep_m]))
 else:
     st.info("אין חגיגות נוספות המתוכננות לחודש זה.")
 
 st.markdown("---")
 
-# --- 3. רשימת כל החוגגים (שם, לועזי, עברי, מזל, גיל) ---
+# --- 3. רשימת כל החוגגים ---
+# מציגה: שם, לועזי, עברי, מזל, גיל (ללא ימים ליומולדת, חודש ויום)
 st.header("📊 רשימת כל החוגגים")
 if all_people:
     all_sorted = sorted(all_people, key=lambda x: (x["חודש"], x["יום"]))
     df_all = pd.DataFrame(all_sorted)
-    cols_all = ["שם", "תאריך לועזי", "תאריך עברי", "מזל", "גיל"]
+    cols_to_keep_all = ["שם", "תאריך לועזי", "תאריך עברי", "מזל", "גיל"]
     st.table(df_all.style.apply(style_rows, axis=None)
              .hide(axis="index")
-             .hide(axis="columns", subset=[c for c in df_all.columns if c not in cols_all]))
+             .hide(axis="columns", subset=[c for c in df_all.columns if c not in cols_to_keep_all]))
 
 st.markdown("---")
 
@@ -134,5 +140,3 @@ st.markdown("---")
 # --- 5. הוספה קבועה ---
 st.subheader("📌 הוספה קבועה")
 if url: st.link_button("🔗 פתח אקסל לעריכה קבועה", url)
-
-
