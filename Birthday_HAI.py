@@ -17,7 +17,7 @@ def get_zodiac(d, m):
         if (m==sm and d>=sd) or (m==em and d<=ed): return n
     return "דגים ♓"
 
-# פונקציה לעיבוד נתונים (חישוב גיל, עברי ומזל)
+# פונקציית עיבוד נתונים
 def process_person(name, bday_date):
     today = date.today()
     h_date = dates.HebrewDate.from_pydate(bday_date)
@@ -30,35 +30,34 @@ def process_person(name, bday_date):
         "גיל": age
     }
 
-# חיבור וקריאת נתונים (קריאה תמיד עובדת עם הקישור שנתת)
-conn = st.connection("gsheets", type=GSheetsConnection)
-spreadsheet_url = st.secrets["connections"]["gsheets"]["spreadsheet"]
-
+# כותרת האפליקציה
 st.title("🎂 לוח ימי הולדת משפחתי")
 
-# הצגת הנתונים מהאקסל
+# חיבור (קריאה בלבד)
 try:
+    conn = st.connection("gsheets", type=GSheetsConnection)
+    url = st.secrets["connections"]["gsheets"]["spreadsheet"]
     df_raw = conn.read(ttl=0).dropna(how="all")
+    
     if not df_raw.empty:
         processed_list = []
         for _, row in df_raw.iterrows():
             try:
-                # המרה של התאריך מהאקסל
                 b_date = pd.to_datetime(row['Birthday'], dayfirst=True).date()
                 processed_list.append(process_person(row['Full_Name'], b_date))
             except: continue
         
-        if processed_list:
-            st.subheader("📋 רשימת החוגגים הקבועה")
-            st.dataframe(pd.DataFrame(processed_list), use_container_width=True, hide_index=True)
+        st.subheader("📋 רשימת החוגגים הקבועה")
+        st.dataframe(pd.DataFrame(processed_list), use_container_width=True, hide_index=True)
     else:
-        st.info("הרשימה באקסל ריקה כרגע.")
-except:
-    st.error("לא הצלחתי למשוך נתונים. וודא שהכותרות באקסל הן Full_Name ו-Birthday.")
+        st.info("הרשימה באקסל ריקה.")
+except Exception as e:
+    st.error(f"שגיאת חיבור: {e}")
+    st.info("וודא שהגדרת את ה-spreadsheet ב-Secrets ושמות העמודות באקסל הם Full_Name ו-Birthday.")
 
 st.write("---")
 
-# אזור הוספה ובדיקה
+# אזור הבדיקה והקישור
 col1, col2 = st.columns(2)
 
 with col1:
@@ -69,13 +68,12 @@ with col1:
         if st.form_submit_button("חשב נתונים"):
             if t_name:
                 res = process_person(t_name, t_bday)
-                st.success(f"תוצאות עבור {res['שם']}:")
-                st.write(f"**גיל:** {res['גיל']} | **מזל:** {res['מזל']} | **עברי:** {res['תאריך עברי']}")
-                st.warning("⚠️ המידע הזה מוצג זמנית ולא יישמר באקסל.")
+                st.success(f"תוצאות עבור {res['שם']}: {res['גיל']} שנים, מזל {res['מזל']}, עברי: {res['תאריך עברי']}")
+                st.warning("שים לב: המידע לא נשמר בקובץ.")
 
 with col2:
     st.subheader("📌 הוספה קבועה")
-    st.write("כדי להוסיף חוגג שיופיע ברשימה תמיד, יש להוסיף אותו ישירות לקובץ האקסל:")
-    # שימוש בקישור מה-Secrets ליצירת כפתור מעבר
-    st.link_button("🔗 פתח את הקובץ להוספת חוגג", spreadsheet_url)
-    st.info("לאחר ההוספה ושמירה באקסל, רענן את הדף הזה.")
+    st.write("להוספה קבועה, לחץ על הכפתור והוסף שורה חדשה באקסל:")
+    if 'url' in locals():
+        st.link_button("🔗 פתח אקסל לעריכה", url)
+    st.info("לאחר ההוספה באקסל, רענן את האפליקציה.")
