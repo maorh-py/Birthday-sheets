@@ -48,7 +48,7 @@ if "temp_people" not in st.session_state:
 all_people = []
 spreadsheet_url = ""
 
-# חיבור וטעינה
+# טעינת נתונים
 try:
     conn = st.connection("gsheets", type=GSheetsConnection)
     spreadsheet_url = st.secrets["connections"]["gsheets"]["spreadsheet"]
@@ -58,8 +58,7 @@ try:
             b_date = pd.to_datetime(row['Birthday'], dayfirst=True).date()
             all_people.append(process_person(row['Full_Name'], b_date))
         except: continue
-except Exception as e:
-    st.error(f"שגיאה בחיבור לנתונים: {e}")
+except: pass
 
 all_people.extend(st.session_state.temp_people)
 today = date.today()
@@ -81,36 +80,37 @@ if hbd_today:
         """, unsafe_allow_html=True)
 
 # פונקציית צביעה פשוטה
-def color_temp(row):
+def color_yellow(row):
     return ['background-color: #ffffd1' if row.זמני else '' for _ in row]
 
 # --- 2. טבלת החודש ---
 st.header(f"📅 חגיגות קרובות לחודש זה")
 this_month = [p for p in all_people if p["חודש"] == today.month and p["יום"] >= today.day]
-this_month = sorted(this_month, key=lambda x: x["יום"])
-
 if this_month:
-    df_m = pd.DataFrame(this_month)
-    # כאן אנחנו מגדירים בדיוק מה להציג
-    cols_to_show_m = ["שם", "תאריך לועזי", "גיל", "ימים ליום הולדת"]
-    # יוצרים תצוגה שכוללת גם את 'זמני' לצורך הצביעה, אבל נציג רק את היתר
-    st.table(df_m.style.apply(color_temp, axis=1)
+    df_m = pd.DataFrame(sorted(this_month, key=lambda x: x["יום"]))
+    
+    # יצירת טבלה חדשה רק עם העמודות שרצית
+    view_m = df_m[["שם", "תאריך לועזי", "גיל", "ימים ליום הולדת", "זמני"]]
+    
+    st.table(view_m.style.apply(color_yellow, axis=1)
              .hide(axis="index")
-             .hide(axis="columns", subset=["חודש", "יום", "זמני", "תאריך עברי", "מזל"]))
+             .hide(axis="columns", subset=["זמני"]))
 else:
-    st.info("אין חגיגות נוספות המתוכננות לחודש זה.")
+    st.info("אין חגיגות נוספות החודש.")
 
 st.markdown("---")
 
 # --- 3. רשימת כל החוגגים ---
 st.header("📊 רשימת כל החוגגים")
 if all_people:
-    all_sorted = sorted(all_people, key=lambda x: (x["חודש"], x["יום"]))
-    df_all = pd.DataFrame(all_sorted)
-    # כאן אנחנו מגדירים מה להציג בטבלה הכללית
-    st.table(df_all.style.apply(color_temp, axis=1)
+    df_all = pd.DataFrame(sorted(all_people, key=lambda x: (x["חודש"], x["יום"])))
+    
+    # יצירת טבלה חדשה רק עם העמודות שרצית
+    view_all = df_all[["שם", "תאריך לועזי", "תאריך עברי", "מזל", "גיל", "זמני"]]
+    
+    st.table(view_all.style.apply(color_yellow, axis=1)
              .hide(axis="index")
-             .hide(axis="columns", subset=["חודש", "יום", "זמני", "ימים ליום הולדת"]))
+             .hide(axis="columns", subset=["זמני"]))
 
 st.markdown("---")
 
