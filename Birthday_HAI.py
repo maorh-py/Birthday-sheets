@@ -5,7 +5,7 @@ from pyluach import dates
 from st_gsheets_connection import GSheetsConnection
 
 # הגדרות דף
-st.set_page_config(page_title="לוח ימי הולדת", layout="wide")
+st.set_page_config(page_title="לוח ימי הולדת משפחתי", layout="centered")
 
 # פונקציית מזלות
 def get_zodiac(d, m):
@@ -32,10 +32,10 @@ def process_person(name, bday_date):
 
 st.title("🎂 לוח ימי הולדת משפחתי")
 
-# חיבור וקריאה מהגליון
+# --- חלק 1: תצוגת הרשימה הקבועה ---
 try:
     conn = st.connection("gsheets", type=GSheetsConnection)
-    spreadsheet_url = st.secrets["connections"]["gsheets"]["spreadsheet"]
+    url = st.secrets["connections"]["gsheets"]["spreadsheet"]
     df_raw = conn.read(ttl=0).dropna(how="all")
     
     if not df_raw.empty:
@@ -46,31 +46,34 @@ try:
                 processed_list.append(process_person(row['Full_Name'], b_date))
             except: continue
         
-        if processed_list:
-            st.subheader("📋 רשימת החוגגים הקבועה")
-            st.dataframe(pd.DataFrame(processed_list), use_container_width=True, hide_index=True)
+        st.subheader("📋 רשימת החוגגים")
+        st.dataframe(pd.DataFrame(processed_list), use_container_width=True, hide_index=True)
 except Exception:
-    st.info("ממתין לנתונים מהגליון...")
+    st.info("ממתין לנתונים מהאקסל...")
 
-st.write("---")
+st.markdown("---")
 
-# המבנה החדש: אחד מתחת לשני
-st.subheader("➕ הוספה קבועה לרשימה")
-st.write("כדי להוסיף חוגג שיופיע כאן תמיד, יש להוסיף אותו ישירות לקובץ האקסל:")
-st.link_button("🔗 פתח אקסל להוספת חוגג קבוע", spreadsheet_url)
+# --- חלק 2: הוספה קבועה (קישור) ---
+st.subheader("📌 הוספה קבועה")
+st.write("כדי להוסיף חוגג שיופיע כאן תמיד, יש להוסיף אותו לקובץ האקסל:")
+st.link_button("🔗 פתח אקסל להוספה קבועה", url)
+st.caption("לאחר השמירה באקסל, רענן את הדף הזה.")
 
-st.write("") # מרווח קטן
+st.markdown("---")
 
-st.subheader("⏱️ הוספה זמנית (לבדיקה בלבד)")
-with st.form("temp_check", clear_on_submit=True):
+# --- חלק 3: הוספה זמנית (סימולטור) ---
+st.subheader("⏱️ הוספה זמנית")
+st.info("כאן אפשר לבדוק מזל וגיל בלי לשמור את הנתונים.")
+with st.form("temp_add", clear_on_submit=True):
     t_name = st.text_input("שם החוגג:")
-    t_bday = st.date_input("תאריך לידה:", value=date(1990,1,1), min_value=date(1920,1,1))
+    t_bday = st.date_input("תאריך לידה:", value=date(2000, 1, 1), min_value=date(1920, 1, 1))
+    submit = st.form_submit_button("בדוק נתונים")
     
-    if st.form_submit_button("חשב נתונים"):
+    if submit:
         if t_name:
             res = process_person(t_name, t_bday)
-            st.success(f"התוצאה עבור {res['שם']}:")
-            st.write(f"**גיל:** {res['גיל']} | **מזל:** {res['מזל']} | **תאריך עברי:** {res['תאריך עברי']}")
-            st.warning("⚠️ שים לב: המידע הזה לא נשמר באקסל וייעלם ברענון הדף.")
+            st.success(f"**תוצאה זמנית עבור {res['שם']}:**")
+            st.write(f"גיל: {res['גיל']} | מזל: {res['מזל']} | תאריך עברי: {res['תאריך עברי']}")
+            st.warning("שים לב: המידע לא נשמר ויימחק ברענון.")
         else:
-            st.error("נא להזין שם.")
+            st.error("נא להזין שם כדי לבצע בדיקה.")
