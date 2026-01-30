@@ -6,7 +6,7 @@ from pyluach import dates
 # הגדרות דף
 st.set_page_config(page_title="לוח ימי הולדת משפחתי", layout="centered")
 
-# CSS להעלמת עמודת האינדקס ועיצוב הטבלאות
+# CSS לניקוי הטבלה (העלמת אינדקס)
 st.markdown("""
     <style>
     table th:first-child, table td:first-child { display: none !important; }
@@ -35,13 +35,14 @@ def process_person(name, bday_date, is_temporary=False):
     if next_bday < today:
         next_bday = next_bday.replace(year=today.year + 1)
     
+    # כאן שיניתי את המפתח למה שחיפשת בשורה 101
     return {
         "שם": name,
         "תאריך לועזי": bday_date.strftime('%d/%m/%Y'),
         "תאריך עברי": h_date.hebrew_date_string(),
         "מזל": get_zodiac(bday_date.day, bday_date.month),
         "גיל": today.year - bday_date.year - ((today.month, today.day) < (bday_date.month, bday_date.day)),
-        "ימים ליום הולדת": (next_bday - today).days,
+        "עוד כמה ימים ליום הולדת": (next_bday - today).days, 
         "חודש": bday_date.month,
         "יום": bday_date.day,
         "זמני": is_temporary
@@ -68,9 +69,8 @@ except: pass
 all_data.extend(st.session_state.temp_people)
 today = date.today()
 
-# --- 1. חגיגות היום (החזרתי את החלק הזה) ---
+# --- 1. חגיגות היום (מופיע לפני הכל) ---
 hbd_today = [p for p in all_data if p["חודש"] == today.month and p["יום"] == today.day]
-
 if hbd_today:
     st.balloons()
     for p in hbd_today:
@@ -78,9 +78,7 @@ if hbd_today:
             <div style="background-color: #ffffff; padding: 25px; border-radius: 20px; text-align: center; 
                         border: 3px solid #f0f2f6; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 30px;">
                 <h3 style="color: #ff4b4b; margin: 0; font-size: 24px;">🎈 מזל טוב 🎈</h3>
-                <h1 style="color: #1f1f1f; margin: 10px 0; font-size: 45px;">
-                    🎁 {p['שם']} 🎁
-                </h1>
+                <h1 style="color: #1f1f1f; margin: 10px 0; font-size: 45px;">🎁 {p['שם']} 🎁</h1>
                 <h2 style="color: #ff4b4b; margin: 0;">חוגג/ת היום {p['גיל']} שנים! 🎂</h2>
             </div>
         """, unsafe_allow_html=True)
@@ -89,7 +87,7 @@ if hbd_today:
 def color_rows(df, original_list):
     colors = pd.DataFrame('', index=df.index, columns=df.columns)
     for i in range(len(df)):
-        if original_list[i]['זמני']:
+        if i < len(original_list) and original_list[i]['זמני']:
             colors.iloc[i] = 'background-color: #ffffd1'
     return colors
 
@@ -98,7 +96,7 @@ st.header(f"📅 חגיגות קרובות לחודש זה")
 this_month_list = sorted([p for p in all_data if p["חודש"] == today.month and p["יום"] >= today.day], key=lambda x: x["יום"])
 
 if this_month_list:
-    df_month = pd.DataFrame(this_month_list)[["שם", "תאריך לועזי", "גיל","עוד כמה ימים ליום הולדת"]]
+    df_month = pd.DataFrame(this_month_list)[["שם", "תאריך לועזי", "גיל", "עוד כמה ימים ליום הולדת"]]
     st.table(df_month.style.apply(lambda x: color_rows(df_month, this_month_list), axis=None))
 else:
     st.info("אין חגיגות נוספות החודש.")
@@ -136,5 +134,3 @@ st.markdown("---")
 # --- 5. הוספה קבועה ---
 st.subheader("📌 הוספה קבועה")
 if spreadsheet_url: st.link_button("🔗 פתח אקסל לעריכה קבועה", spreadsheet_url)
-
-
