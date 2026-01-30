@@ -3,14 +3,14 @@ import pandas as pd
 from datetime import date
 from pyluach import dates
 
-# תיקון שורה 5: ניסיון ייבוא גמיש כדי למנוע שגיאות שרת
+# מנגנון ייבוא גמיש למניעת שגיאות שרת
 try:
     from streamlit_gsheets import GSheetsConnection
 except ImportError:
     try:
         from st_gsheets_connection import GSheetsConnection
     except ImportError:
-        st.error("שגיאה: חסרה ספריית החיבור לגוגל שיטס. וודא ש-st-gsheets-connection מופיע ב-requirements.txt")
+        st.error("שגיאה: חסרה ספריית החיבור. וודא ש-st-gsheets-connection מופיע ב-requirements.txt")
 
 # הגדרות דף
 st.set_page_config(page_title="לוח ימי הולדת משפחתי", layout="centered")
@@ -42,11 +42,8 @@ st.title("🎂 לוח ימי הולדת משפחתי")
 
 # --- חלק 1: תצוגת הרשימה הקבועה ---
 try:
-    # יצירת החיבור
     conn = st.connection("gsheets", type=GSheetsConnection)
     url = st.secrets["connections"]["gsheets"]["spreadsheet"]
-    
-    # קריאת הנתונים
     df_raw = conn.read(ttl=0).dropna(how="all")
     
     if not df_raw.empty:
@@ -60,23 +57,12 @@ try:
         if processed_list:
             st.subheader("📋 רשימת החוגגים")
             st.dataframe(pd.DataFrame(processed_list), use_container_width=True, hide_index=True)
-except Exception as e:
-    st.info("מתחבר לנתונים... (אם מופיעה שגיאה, וודא שהגדרת Secrets כראוי)")
+except Exception:
+    st.info("מתחבר לנתונים...")
 
 st.markdown("---")
 
-# --- חלק 2: הוספה קבועה (אחד מתחת לשני) ---
-st.subheader("📌 הוספה קבועה")
-st.write("כדי להוסיף חוגג שיופיע כאן תמיד, יש להוסיף אותו לקובץ האקסל:")
-if 'url' in locals():
-    st.link_button("🔗 פתח אקסל להוספה קבועה", url)
-else:
-    st.warning("קישור לאקסל לא נמצא ב-Secrets")
-st.caption("לאחר השמירה באקסל, רענן את הדף הזה.")
-
-st.markdown("---")
-
-# --- חלק 3: הוספה זמנית ---
+# --- חלק 2: הוספה זמנית (עבר לכאן) ---
 st.subheader("⏱️ הוספה זמנית")
 st.info("כאן אפשר לבדוק מזל וגיל בלי לשמור את הנתונים.")
 with st.form("temp_add", clear_on_submit=True):
@@ -90,6 +76,15 @@ with st.form("temp_add", clear_on_submit=True):
             st.success(f"**תוצאה זמנית עבור {res['שם']}:**")
             st.write(f"גיל: {res['גיל']} | מזל: {res['מזל']} | תאריך עברי: {res['תאריך עברי']}")
             st.balloons()
-            st.warning("שים לב: המידע לא נשמר ויימחק ברענון.")
+            st.warning("שים לב: המידע הזה לא נשמר באקסל.")
         else:
-            st.error("נא להזין שם כדי לבצע בדיקה.")
+            st.error("נא להזין שם.")
+
+st.markdown("---")
+
+# --- חלק 3: הוספה קבועה (עבר לסוף) ---
+st.subheader("📌 הוספה קבועה")
+st.write("להוספת חוגג שיופיע כאן תמיד, יש להוסיף אותו ישירות לקובץ האקסל:")
+if 'url' in locals():
+    st.link_button("🔗 פתח אקסל להוספה קבועה", url)
+st.caption("לאחר השמירה באקסל, רענן את האפליקציה כדי לראות את השינוי.")
