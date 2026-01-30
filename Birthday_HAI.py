@@ -98,7 +98,7 @@ st.header(f"📅 חגיגות קרובות לחודש זה")
 this_month_list = sorted([p for p in all_data if p["חודש"] == today.month and p["יום"] >= today.day], key=lambda x: x["יום"])
 
 if this_month_list:
-    df_month = pd.DataFrame(this_month_list)[["שם", "תאריך לועזי", "גיל", "עוד כמה ימים ליום הולדת"]]
+    df_month = pd.DataFrame(this_month_list)[["שם", "תאריך לועזי", "גיל","עוד כמה ימים ליום הולדת"]]
     st.table(df_month.style.apply(lambda x: color_rows(df_month, this_month_list), axis=None))
 else:
     st.info("אין חגיגות נוספות החודש.")
@@ -136,4 +136,5 @@ st.markdown("---")
 # --- 5. הוספה קבועה ---
 st.subheader("📌 הוספה קבועה")
 if spreadsheet_url: st.link_button("🔗 פתח אקסל לעריכה קבועה", spreadsheet_url)
+
 
