@@ -26,15 +26,21 @@ def process_person(name, bday_date, is_temporary=False):
     next_bday = bday_date.replace(year=today.year)
     if next_bday < today:
         next_bday = next_bday.replace(year=today.year + 1)
+    
     days_left = (next_bday - today).days
     age = today.year - bday_date.year - ((today.month, today.day) < (bday_date.month, bday_date.day))
+    
+    # חשוב: להחזיר את כל השדות כדי שנוכל למיין ולצבוע לפיהם
     return {
         "שם": name,
         "תאריך לועזי": bday_date.strftime('%d/%m/%Y'),
         "תאריך עברי": h_date.hebrew_date_string(),
         "מזל": get_zodiac(bday_date.day, bday_date.month),
         "גיל": age,
-        "ימים ליום הולדת": days_left
+        "ימים ליום הולדת": days_left,
+        "חודש": bday_date.month, # שדה עזר למיון
+        "יום": bday_date.day,     # שדה עזר למיון
+        "זמני": is_temporary     # שדה עזר לצביעה
     }
 
 if "temp_people" not in st.session_state:
@@ -72,12 +78,13 @@ if hbd_today:
             </div>
         """, unsafe_allow_html=True)
 
-# פונקציית עיצוב צהוב לזמניים - בודקת לפי הנתונים המקוריים
+# פונקציית עיצוב צהוב לזמניים
 def apply_style(df):
     colors = pd.DataFrame('', index=df.index, columns=df.columns)
-    for i in df.index:
-        if df.at[i, 'זמני']:
-            colors.loc[i] = 'background-color: #ffffd1'
+    if 'זמני' in df.columns:
+        for i in df.index:
+            if df.at[i, 'זמני']:
+                colors.loc[i] = 'background-color: #ffffd1'
     return colors
 
 # --- 2. טבלת החודש ---
@@ -87,8 +94,9 @@ this_month = sorted(this_month, key=lambda x: x["יום"])
 
 if this_month:
     df_m = pd.DataFrame(this_month)
+    # העמודות שיוצגו בטבלת החודש
     cols_m = ["שם", "תאריך לועזי", "גיל", "ימים ליום הולדת"]
-    # מחילים עיצוב ומסתירים את כל מה שלא ברשימה
+    
     st.table(df_m.style.apply(apply_style, axis=None)
              .hide(axis="index")
              .hide(axis="columns", subset=[c for c in df_m.columns if c not in cols_m]))
@@ -102,7 +110,9 @@ st.header("📊 רשימת כל החוגגים")
 if all_people:
     all_sorted = sorted(all_people, key=lambda x: (x["חודש"], x["יום"]))
     df_all = pd.DataFrame(all_sorted)
+    # העמודות שיוצגו בטבלה הכללית
     cols_all = ["שם", "תאריך לועזי", "תאריך עברי", "מזל", "גיל"]
+    
     st.table(df_all.style.apply(apply_style, axis=None)
              .hide(axis="index")
              .hide(axis="columns", subset=[c for c in df_all.columns if c not in cols_all]))
@@ -129,10 +139,3 @@ with st.form("temp_add", clear_on_submit=True):
         if t_name:
             st.session_state.temp_people.append(process_person(t_name, t_date, is_temporary=True))
             st.rerun()
-
-st.markdown("---")
-
-# --- 5. הוספה קבועה ---
-st.subheader("📌 הוספה קבועה")
-if url: st.link_button("🔗 פתח אקסל לעריכה קבועה", url)
-
