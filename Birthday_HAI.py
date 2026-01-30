@@ -5,7 +5,7 @@ from pyluach import dates
 from streamlit_gsheets import GSheetsConnection
 
 # הגדרות דף
-st.set_page_config(page_title="לוח ימי הולדת", layout="wide")
+st.set_page_config(page_title="ניהול ימי הולדת", layout="wide")
 
 # פונקציית מזלות
 def get_zodiac(d, m):
@@ -30,31 +30,31 @@ def process_person(name, bday_date):
         "גיל": age
     }
 
-# חיבור וקריאת נתונים (קריאה תמיד עובדת!)
+# חיבור וקריאת נתונים
 conn = st.connection("gsheets", type=GSheetsConnection)
+# שליפת הקישור מה-Secrets לטובת הכפתור
 spreadsheet_url = st.secrets["connections"]["gsheets"]["spreadsheet"]
 
 st.title("🎂 לוח ימי הולדת משפחתי")
 
-# הצגת נתונים קיימים מהאקסל
+# הצגת הנתונים מהאקסל
 try:
     df_raw = conn.read(ttl=0).dropna(how="all")
     if not df_raw.empty:
         processed_list = []
         for _, row in df_raw.iterrows():
             try:
-                # המרה של התאריך מהאקסל
                 b_date = pd.to_datetime(row['Birthday'], dayfirst=True).date()
                 processed_list.append(process_person(row['Full_Name'], b_date))
             except: continue
         
         if processed_list:
-            st.subheader("📋 רשימת החוגגים הקבועה")
+            st.subheader("📋 רשימת החוגגים")
             st.dataframe(pd.DataFrame(processed_list), use_container_width=True, hide_index=True)
     else:
         st.info("הרשימה באקסל ריקה כרגע.")
-except Exception as e:
-    st.error("לא הצלחתי למשוך נתונים מהאקסל. וודא שהכותרות באקסל הן Full_Name ו-Birthday.")
+except:
+    st.error("לא הצלחתי למשוך נתונים. וודא שהקישור ב-Secrets תקין והכותרות באקסל הן Full_Name ו-Birthday.")
 
 st.write("---")
 
@@ -62,18 +62,19 @@ st.write("---")
 col1, col2 = st.columns(2)
 
 with col1:
-    st.subheader("🔍 בדיקה מהירה (לא נשמר)")
+    st.subheader("🔍 בדיקה מהירה (סימולטור)")
     with st.form("temp_check"):
         t_name = st.text_input("שם לבדיקה:")
         t_bday = st.date_input("תאריך לידה:", value=date(1990,1,1), min_value=date(1920,1,1))
-        if st.form_submit_button("בדוק גיל ומזל"):
-            res = process_person(t_name, t_bday)
-            st.success(f"התוצאה עבור {res['שם']}:")
-            st.write(f"גיל: {res['גיל']} | מזל: {res['מזל']} | עברי: {res['תאריך עברי']}")
-            st.info("☝️ שים לב: המידע הזה יוצג כאן זמנית ולא יישמר בקובץ.")
+        if st.form_submit_button("חשב נתונים"):
+            if t_name:
+                res = process_person(t_name, t_bday)
+                st.success(f"תוצאות עבור {res['שם']}:")
+                st.write(f"**גיל:** {res['גיל']} | **מזל:** {res['מזל']} | **עברי:** {res['תאריך עברי']}")
+                st.warning("⚠️ המידע הזה מוצג זמנית ולא יישמר באקסל.")
 
 with col2:
-    st.subheader("📌 הוספה קבועה לרשימה")
-    st.write("כדי להוסיף חוגג שיופיע כאן תמיד, יש להוסיף אותו ידנית לקובץ האקסל:")
-    st.link_button("🔗 פתח קובץ אקסל לעריכה", spreadsheet_url)
-    st.caption("לאחר ההוספה באקסל, פשוט רענן את הדף הזה.")
+    st.subheader("📌 הוספה קבועה")
+    st.write("כדי להוסיף חוגג שיופיע ברשימה תמיד, יש להוסיף אותו ישירות לקובץ האקסל:")
+    st.link_button("🔗 פתח את הקובץ להוספת חוגג", spreadsheet_url)
+    st.info("לאחר ההוספה ושמירה באקסל, רענן את הדף הזה.")
