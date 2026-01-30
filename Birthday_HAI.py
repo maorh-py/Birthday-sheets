@@ -6,12 +6,12 @@ from pyluach import dates
 # הגדרות דף
 st.set_page_config(page_title="לוח ימי הולדת משפחתי", layout="centered")
 
-# CSS להעלמת עמודת האינדקס - הדרך היחידה שבאמת עובדת ב-st.table
+# CSS להעלמת עמודת האינדקס (המספרים בצד) - הפעם בצורה גורפת
 st.markdown("""
     <style>
-    thead tr th:first-child, tbody tr td:first-child {
-        display: none !important;
-    }
+    /* העלמת עמודת האינדקס */
+    table th:first-child, table td:first-child { display: none !important; }
+    /* מתיחת הטבלה לרוחב המלא */
     [data-testid="stTable"] { width: 100%; }
     </style>
     """, unsafe_allow_html=True)
@@ -55,7 +55,7 @@ if "temp_people" not in st.session_state:
 all_data = []
 spreadsheet_url = ""
 
-# טעינת נתונים בסיסיים
+# טעינת נתונים
 try:
     conn = st.connection("gsheets", type=GSheetsConnection)
     spreadsheet_url = st.secrets["connections"]["gsheets"]["spreadsheet"]
@@ -70,50 +70,44 @@ except: pass
 all_data.extend(st.session_state.temp_people)
 today = date.today()
 
-# פונקציית צביעה למערך החדש
-def apply_yellow(row):
-    return ['background-color: #ffffd1' if row.זמני else '' for _ in row]
+# --- פונקציית צביעה חדשה וחכמה ---
+def color_rows(df, original_data):
+    # יוצרת מטריצה של צבעים באותה מידה של הטבלה
+    colors = pd.DataFrame('', index=df.index, columns=df.columns)
+    for i, row in df.iterrows():
+        # בודקת במקור הנתונים אם השורה היא זמנית
+        if original_data[i]['זמני']:
+            colors.iloc[i] = 'background-color: #ffffd1'
+    return colors
 
-# --- 1. חגיגות היום ---
-# (נשאר אותו דבר)
-hbd_today = [p for p in all_data if p["חודש"] == today.month and p["יום"] == today.day]
-if hbd_today:
-    st.balloons()
-    for p in hbd_today:
-        st.markdown(f'<div style="background-color: #ffffff; padding: 25px; border-radius: 20px; text-align: center; border: 3px solid #f0f2f6; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 30px;"><h3>🎈 מזל טוב 🎈</h3><h1>🎁 {p["שם"]} 🎁</h1><h2>חוגג/ת היום {p["גיל"]} שנים! 🎂</h2></div>', unsafe_allow_html=True)
-
-# --- 2. בניית מערך חדש לטבלת החודש ---
+# --- 2. טבלת החודש ---
 st.header(f"📅 חגיגות קרובות לחודש זה")
-this_month_list = [p for p in all_data if p["חודש"] == today.month and p["יום"] >= today.day]
+this_month_list = sorted([p for p in all_data if p["חודש"] == today.month and p["יום"] >= today.day], key=lambda x: x["יום"])
+
 if this_month_list:
-    df_m_raw = pd.DataFrame(sorted(this_month_list, key=lambda x: x["יום"]))
+    # בניית המערך החדש - רק העמודות שאתה רוצה!
+    df_month = pd.DataFrame(this_month_list)[["שם", "תאריך לועזי", "גיל", "ימים ליום הולדת"]]
     
-    # בניית המערך החדש עם העמודות שביקשת בלבד + עמודת עזר לצבע
-    df_month_final = df_m_raw[["שם", "תאריך לועזי", "גיל", "ימים ליום הולדת", "זמני"]]
-    
-    # הצגה ללא אינדקס וללא עמודת זמני
-    st.table(df_month_final.style.apply(apply_yellow, axis=1)
-             .hide(axis="columns", subset=["זמני"]))
+    # צביעה לפי המידע המקורי (this_month_list)
+    st.table(df_month.style.apply(lambda x: color_rows(df_month, this_month_list), axis=None))
 else:
     st.info("אין חגיגות נוספות החודש.")
 
 st.markdown("---")
 
-# --- 3. בניית מערך חדש לטבלה הכללית ---
+# --- 3. רשימת כל החוגגים ---
 st.header("📊 רשימת כל החוגגים")
 if all_data:
-    df_all_raw = pd.DataFrame(sorted(all_data, key=lambda x: (x["חודש"], x["יום"])))
+    all_sorted = sorted(all_data, key=lambda x: (x["חודש"], x["יום"]))
+    # בניית המערך החדש - ללא "ימים ליום הולדת", ללא "חודש", ללא "יום"
+    df_all = pd.DataFrame(all_sorted)[["שם", "תאריך לועזי", "תאריך עברי", "מזל", "גיל"]]
     
-    # בניית המערך החדש עם העמודות שביקשת בלבד + עמודת עזר לצבע
-    df_all_final = df_all_raw[["שם", "תאריך לועזי", "תאריך עברי", "מזל", "גיל", "זמני"]]
-    
-    # הצגה ללא אינדקס וללא עמודת זמני
-    st.table(df_all_final.style.apply(apply_yellow, axis=1)
-             .hide(axis="columns", subset=["זמני"]))
+    # צביעה לפי המידע המקורי (all_sorted)
+    st.table(df_all.style.apply(lambda x: color_rows(df_all, all_sorted), axis=None))
 
 st.markdown("---")
 
-# --- 4. הוספה זמנית ורענון ---
+# --- 4. הוספה זמנית ---
 col_head, col_refresh = st.columns([0.8, 0.2])
 with col_head: st.subheader("⏱️ הוספה זמנית")
 with col_refresh:
