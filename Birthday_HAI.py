@@ -48,7 +48,7 @@ if "temp_people" not in st.session_state:
 all_people = []
 spreadsheet_url = ""
 
-# חיבור לגוגל שיטס ושליפת הקישור לאקסל
+# חיבור וטעינה
 try:
     conn = st.connection("gsheets", type=GSheetsConnection)
     spreadsheet_url = st.secrets["connections"]["gsheets"]["spreadsheet"]
@@ -80,14 +80,9 @@ if hbd_today:
             </div>
         """, unsafe_allow_html=True)
 
-# פונקציית צביעה
-def apply_style(df):
-    colors = pd.DataFrame('', index=df.index, columns=df.columns)
-    if 'זמני' in df.columns:
-        for i in df.index:
-            if df.at[i, 'זמני']:
-                colors.loc[i] = 'background-color: #ffffd1'
-    return colors
+# פונקציית צביעה פשוטה
+def color_temp(row):
+    return ['background-color: #ffffd1' if row.זמני else '' for _ in row]
 
 # --- 2. טבלת החודש ---
 st.header(f"📅 חגיגות קרובות לחודש זה")
@@ -96,10 +91,12 @@ this_month = sorted(this_month, key=lambda x: x["יום"])
 
 if this_month:
     df_m = pd.DataFrame(this_month)
-    cols_m = ["שם", "תאריך לועזי", "גיל", "ימים ליום הולדת"]
-    st.table(df_m.style.apply(apply_style, axis=None)
+    # כאן אנחנו מגדירים בדיוק מה להציג
+    cols_to_show_m = ["שם", "תאריך לועזי", "גיל", "ימים ליום הולדת"]
+    # יוצרים תצוגה שכוללת גם את 'זמני' לצורך הצביעה, אבל נציג רק את היתר
+    st.table(df_m.style.apply(color_temp, axis=1)
              .hide(axis="index")
-             .hide(axis="columns", subset=[c for c in df_m.columns if c not in cols_m]))
+             .hide(axis="columns", subset=["חודש", "יום", "זמני", "תאריך עברי", "מזל"]))
 else:
     st.info("אין חגיגות נוספות המתוכננות לחודש זה.")
 
@@ -110,10 +107,10 @@ st.header("📊 רשימת כל החוגגים")
 if all_people:
     all_sorted = sorted(all_people, key=lambda x: (x["חודש"], x["יום"]))
     df_all = pd.DataFrame(all_sorted)
-    cols_all = ["שם", "תאריך לועזי", "תאריך עברי", "מזל", "גיל"]
-    st.table(df_all.style.apply(apply_style, axis=None)
+    # כאן אנחנו מגדירים מה להציג בטבלה הכללית
+    st.table(df_all.style.apply(color_temp, axis=1)
              .hide(axis="index")
-             .hide(axis="columns", subset=[c for c in df_all.columns if c not in cols_all]))
+             .hide(axis="columns", subset=["חודש", "יום", "זמני", "ימים ליום הולדת"]))
 
 st.markdown("---")
 
@@ -140,9 +137,7 @@ with st.form("temp_add", clear_on_submit=True):
 
 st.markdown("---")
 
-# --- 5. הוספה קבועה (החזרתי את הקישור שנעלם) ---
+# --- 5. הוספה קבועה ---
 st.subheader("📌 הוספה קבועה")
 if spreadsheet_url:
     st.link_button("🔗 פתח אקסל לעריכה קבועה", spreadsheet_url)
-else:
-    st.warning("לא נמצא קישור לקובץ האקסל בהגדרות המערכת.")
