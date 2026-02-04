@@ -105,18 +105,21 @@ if this_month_list:
 st.header("📊 רשימת כל החוגגים")
 if all_data:
     all_sorted = sorted(all_data, key=lambda x: (x["חודש"], x["יום"]))
- df_all = pd.DataFrame(all_sorted)[["סמל מזל", "מזל", "שם", "תאריך לועזי", "תאריך עברי", "גיל"]]
-
+    
+    # יצירת ה-DataFrame - ודא שהשורה הזו מיושרת שמאלה עד הסוף בתוך ה-if
+    df_all = pd.DataFrame(all_sorted)[["סמל מזל", "מזל", "שם", "תאריך לועזי", "תאריך עברי", "גיל"]]
+    
     st.dataframe(
-    df_all.style.apply(lambda x: color_rows(df_all, all_sorted), axis=None),
-    column_config={
-        "סמל מזל": st.column_config.ImageColumn(" ", width="medium"), 
-        "מזל": st.column_config.TextColumn("מזל"),
-        "גיל": st.column_config.NumberColumn("גיל", format="%d"),
-         "שם": st.column_config.TextColumn("שם", width="medium")
-    },
-    hide_index=True,
-    use_container_width=True,
+        df_all.style.apply(lambda x: color_rows(df_all, all_sorted), axis=None),
+        column_config={
+            # כאן אנחנו מגדירים את האיור האמנותי הגדול
+            "סמל מזל": st.column_config.ImageColumn(" ", width="large"),
+            "מזל": st.column_config.TextColumn("מזל", width="small"),
+            "שם": st.column_config.TextColumn("שם", width="medium"),
+            "גיל": st.column_config.NumberColumn("גיל", format="%d")
+        },
+        hide_index=True,
+        use_container_width=True,
         height=500  # גובה שמציג כ-15 שורות לפני שצריך לגלול
     )
 
@@ -133,6 +136,7 @@ with st.expander("⏱️ הוספה זמנית / רענון"):
             if t_name:
                 st.session_state.temp_people.append(process_person(t_name, t_date, is_temporary=True))
                 st.rerun()
+
 
 
 
