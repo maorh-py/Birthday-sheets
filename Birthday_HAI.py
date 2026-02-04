@@ -12,6 +12,7 @@ except ImportError:
     from streamlit_gsheets import GSheetsConnection
 # מזלות
 def get_zodiac_info(d, m):
+    # איורים אמנותיים יפים (Watercolor)
     icon_base = "https://img.icons8.com/external-tulpahn-flat-tulpahn/128/external-"
     zodiacs = [
         (21,3,19,4, f"{icon_base}aries-zodiac-tulpahn-flat-tulpahn.png", "טלה"),
@@ -31,6 +32,7 @@ def get_zodiac_info(d, m):
         if (m == sm and d >= sd) or (m == em and d <= ed):
             return img, name
     return zodiacs[-1][4], zodiacs[-1][5]
+    
 # עיבוד תאריכים
 def process_person(name, bday_date, is_temporary=False):
     today = date.today()
@@ -107,20 +109,21 @@ if all_data:
     all_sorted = sorted(all_data, key=lambda x: (x["חודש"], x["יום"]))
     
     # יצירת ה-DataFrame - ודא שהשורה הזו מיושרת שמאלה עד הסוף בתוך ה-if
-    df_all = pd.DataFrame(all_sorted)[["סמל מזל", "מזל", "שם", "תאריך לועזי", "תאריך עברי", "גיל"]]
+    df_all = pd.DataFrame(all_sorted)[["שם", "סמל מזל", "מזל", "גיל", "תאריך לועזי", "תאריך עברי"]]
     
     st.dataframe(
         df_all.style.apply(lambda x: color_rows(df_all, all_sorted), axis=None),
         column_config={
-            # כאן אנחנו מגדירים את האיור האמנותי הגדול
-            "סמל מזל": st.column_config.ImageColumn(" ", width="large"),
-            "מזל": st.column_config.TextColumn("מזל", width="small"),
             "שם": st.column_config.TextColumn("שם", width="medium"),
-            "גיל": st.column_config.NumberColumn("גיל", format="%d")
+            "סמל מזל": st.column_config.ImageColumn(" ", width="large"), # התמונה האמנותית
+            "מזל": st.column_config.TextColumn("מזל", width="small"),
+            "גיל": st.column_config.NumberColumn("גיל", format="%d", width="small"),
+            "תאריך לועזי": st.column_config.TextColumn("לועזי", width="small"),
+            "תאריך עברי": st.column_config.TextColumn("עברי", width="medium"),
         },
         hide_index=True,
         use_container_width=True,
-        height=500  # גובה שמציג כ-15 שורות לפני שצריך לגלול
+        height=600 
     )
 
 # ---  הוספה זמנית ---
@@ -136,6 +139,7 @@ with st.expander("⏱️ הוספה זמנית / רענון"):
             if t_name:
                 st.session_state.temp_people.append(process_person(t_name, t_date, is_temporary=True))
                 st.rerun()
+
 
 
 
