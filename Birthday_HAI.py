@@ -10,8 +10,8 @@ try:
     from st_gsheets_connection import GSheetsConnection
 except ImportError:
     from streamlit_gsheets import GSheetsConnection
-# מזלות
 
+# פונקציית מזלות מקורית (טקסט + אימוג'י)
 def get_zodiac(d, m):
     zodiacs = [(21,3,19,4,"טלה ♈"),(20,4,20,5,"שור ♉"),(21,5,20,6,"תאומים ♊"),
                (21,6,22,7,"סרטן ♋"),(23,7,22,8,"אריה ♌"),(23,8,22,9,"בתולה ♍"),
@@ -20,7 +20,7 @@ def get_zodiac(d, m):
     for sd,sm,ed,em,n in zodiacs:
         if (m==sm and d>=sd) or (m==em and d<=ed): return n
     return "דגים ♓"
-    
+
 # עיבוד תאריכים
 def process_person(name, bday_date, is_temporary=False):
     today = date.today()
@@ -29,15 +29,13 @@ def process_person(name, bday_date, is_temporary=False):
     if next_bday < today:
         next_bday = next_bday.replace(year=today.year + 1)
     
-    z_img, z_name = get_zodiac_info(bday_date.day, bday_date.month)
-    
     return {
         "שם": name,
         "תאריך לועזי": bday_date.strftime('%d/%m/%Y'),
         "תאריך עברי": h_date.hebrew_date_string(),
         "מזל": get_zodiac(bday_date.day, bday_date.month),
         "גיל": today.year - bday_date.year - ((today.month, today.day) < (bday_date.month, bday_date.day)),
-        "עוד כמה ימים ליום הולדת": (next_bday - today).days, 
+        "עוד כמה ימים": (next_bday - today).days, 
         "חודש": bday_date.month,
         "יום": bday_date.day,
         "זמני": is_temporary
@@ -47,12 +45,10 @@ if "temp_people" not in st.session_state:
     st.session_state.temp_people = []
 
 all_data = []
-spreadsheet_url = ""
 
-# טעינת נתונים
+# טעינת נתונים מגוגל שיטס
 try:
     conn = st.connection("gsheets", type=GSheetsConnection)
-    spreadsheet_url = st.secrets["connections"]["gsheets"]["spreadsheet"]
     df_raw = conn.read(ttl=0).dropna(how="all")
     for _, row in df_raw.iterrows():
         try:
@@ -64,12 +60,12 @@ except: pass
 all_data.extend(st.session_state.temp_people)
 today = date.today()
 
-# --- מי חוגג היום ---
+# --- חוגגים היום ---
 hbd_today = [p for p in all_data if p["חודש"] == today.month and p["יום"] == today.day]
 if hbd_today:
     st.balloons()
     for p in hbd_today:
-        st.markdown(f'<div style="background-color: #ffffff; padding: 20px; border-radius: 15px; text-align: center; border: 2px solid #f0f2f6; margin-bottom: 20px;"><h3>🎈 מזל טוב {p["שם"]}! חוגג/ת היום {p["גיל"]} 🎈</h3></div>', unsafe_allow_html=True)
+        st.success(f"🎈 מזל טוב {p['שם']}! חוגג/ת היום {p['גיל']} 🎈")
 
 # פונקציית צביעה
 def color_rows(df, original_list):
@@ -79,28 +75,36 @@ def color_rows(df, original_list):
             colors.iloc[i] = 'background-color: #ffffd1'
     return colors
 
-# ---  טבלת החודש ---
+# --- טבלת החודש ---
 st.header(f"📅 חגיגות קרובות")
 this_month_list = sorted([p for p in all_data if p["חודש"] == today.month and p["יום"] >= today.day], key=lambda x: x["יום"])
 
 if this_month_list:
-    df_month = pd.DataFrame(this_month_list)[["שם", "תאריך לועזי", "גיל", "עוד כמה ימים ליום הולדת"]]
-    st.dataframe(
-        df_month.style.apply(lambda x: color_rows(df_month, this_month_list), axis=None),
-        hide_index=True, use_container_width=True
-    )
+    df_month = pd.DataFrame(this_month_list)[["שם", "תאריך לועזי", "גיל", "עוד כמה ימים"]]
+    st.dataframe(df_month, hide_index=True, use_container_width=True)
 
-# ---  רשימת כל החוגגים ---
+# --- רשימת כל החוגגים ---
 st.header("📊 רשימת כל החוגגים")
 if all_data:
     all_sorted = sorted(all_data, key=lambda x: (x["חודש"], x["יום"]))
+    
+    # סידור עמודות: שם ראשון מימין
     columns_order = ["שם", "מזל", "גיל", "תאריך לועזי", "תאריך עברי"]
     df_all = pd.DataFrame(all_sorted)[columns_order]
-    st.table(df_all.style.apply(lambda x: color_rows(df_all, all_sorted), axis=None))
+    
+    st.dataframe(
+        df_all.style.apply(lambda x: color_rows(df_all, all_sorted), axis=None),
+        column_config={
+            "שם": st.column_config.TextColumn("שם חוגג", width="medium"),
+            "מזל": st.column_config.TextColumn("מזל", width="small"),
+            "גיל": st.column_config.NumberColumn("גיל", format="%d", width="small"),
+        },
+        hide_index=True,
+        use_container_width=True,
+        height=600 
+    )
 
-st.markdown("---")
-
-# ---  הוספה זמנית ---
+# --- הוספה זמנית ---
 with st.expander("⏱️ הוספה זמנית / רענון"):
     if st.button("🔄 רענון נתונים"):
         st.cache_data.clear()
@@ -113,35 +117,3 @@ with st.expander("⏱️ הוספה זמנית / רענון"):
             if t_name:
                 st.session_state.temp_people.append(process_person(t_name, t_date, is_temporary=True))
                 st.rerun()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
