@@ -80,7 +80,7 @@ st.header(f"📅 חגיגות קרובות")
 this_month_list = sorted([p for p in all_data if p["חודש"] == today.month and p["יום"] >= today.day], key=lambda x: x["יום"])
 
 if this_month_list:
-    df_month = pd.DataFrame(this_month_list)[["שם", "תאריך לועזי", "גיל", "עוד כמה ימים"]]
+    df_month = pd.DataFrame(this_month_list)[["עוד כמה ימים","תאריך לועזי", "גיל","שם"]]
     st.dataframe(df_month, hide_index=True, use_container_width=True)
 
 # --- רשימת כל החוגגים ---
@@ -116,5 +116,6 @@ with st.expander("⏱️ הוספה זמנית / רענון"):
             if t_name:
                 st.session_state.temp_people.append(process_person(t_name, t_date, is_temporary=True))
                 st.rerun()
+
 
 
