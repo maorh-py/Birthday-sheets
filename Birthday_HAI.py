@@ -106,16 +106,17 @@ if this_month_list:
 # ---  רשימת כל החוגגים ---
 st.header("📊 רשימת כל החוגגים")
 if all_data:
+    # מיון הנתונים לפי חודש ויום
     all_sorted = sorted(all_data, key=lambda x: (x["חודש"], x["יום"]))
     
-    columns_order = ["שם", "סמל מזל", "מזל", "גיל", "תאריך לועזי", "תאריך עברי"]
+    columns_order = ["גיל", "תאריך עברי", "תאריך לועזי", "מזל", "סמל מזל", "שם"]
     df_all = pd.DataFrame(all_sorted)[columns_order]
     
     st.dataframe(
         df_all.style.apply(lambda x: color_rows(df_all, all_sorted), axis=None),
         column_config={
             "שם": st.column_config.TextColumn("שם", width="medium"),
-            # כאן מוגדר האיור האמנותי - נתנו לו רוחב "large" כדי שיהיה דומיננטי
+            # העמודה הזו שואבת את הקישור מ-z_img שהגדרת ב-process_person
             "סמל מזל": st.column_config.ImageColumn("איור", width="large"),
             "מזל": st.column_config.TextColumn("מזל", width="small"),
             "גיל": st.column_config.NumberColumn("גיל", format="%d", width="small"),
@@ -139,6 +140,7 @@ with st.expander("⏱️ הוספה זמנית / רענון"):
             if t_name:
                 st.session_state.temp_people.append(process_person(t_name, t_date, is_temporary=True))
                 st.rerun()
+
 
 
 
