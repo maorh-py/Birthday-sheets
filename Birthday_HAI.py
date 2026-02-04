@@ -111,9 +111,9 @@ if all_data:
     st.dataframe(
     df_all.style.apply(lambda x: color_rows(df_all, all_sorted), axis=None),
     column_config={
-        # השם כאן חייב להיות זהה לשם העמודה ב-DataFrame
-        "סמל מזל": st.column_config.ImageColumn(" ", width="large"), 
+        "סמל מזל": st.column_config.ImageColumn(" ", width="medium"), 
         "מזל": st.column_config.TextColumn("מזל"),
+        "שם": st.column_config.TextColumn("שם", width="medium"),
         "גיל": st.column_config.NumberColumn("גיל", format="%d")
     },
     hide_index=True,
@@ -134,6 +134,7 @@ with st.expander("⏱️ הוספה זמנית / רענון"):
             if t_name:
                 st.session_state.temp_people.append(process_person(t_name, t_date, is_temporary=True))
                 st.rerun()
+
 
 
 
