@@ -12,7 +12,6 @@ except ImportError:
     from streamlit_gsheets import GSheetsConnection
 # מזלות
 def get_zodiac_info(d, m):
-    # סט איורים אמנותי בסגנון Watercolor - דומה לתמונה שאהבת
     icon_base = "https://img.icons8.com/external-tulpahn-flat-tulpahn/128/external-"
     zodiacs = [
         (21,3,19,4, f"{icon_base}aries-zodiac-tulpahn-flat-tulpahn.png", "טלה"),
@@ -113,8 +112,8 @@ if all_data:
     column_config={
         "סמל מזל": st.column_config.ImageColumn(" ", width="medium"), 
         "מזל": st.column_config.TextColumn("מזל"),
-        "שם": st.column_config.TextColumn("שם", width="medium"),
-        "גיל": st.column_config.NumberColumn("גיל", format="%d")
+        "גיל": st.column_config.NumberColumn("גיל", format="%d"),
+         "שם": st.column_config.TextColumn("שם", width="medium")
     },
     hide_index=True,
     use_container_width=True,
@@ -134,6 +133,7 @@ with st.expander("⏱️ הוספה זמנית / רענון"):
             if t_name:
                 st.session_state.temp_people.append(process_person(t_name, t_date, is_temporary=True))
                 st.rerun()
+
 
 
 
