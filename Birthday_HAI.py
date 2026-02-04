@@ -11,27 +11,15 @@ try:
 except ImportError:
     from streamlit_gsheets import GSheetsConnection
 # מזלות
-def get_zodiac_info(d, m):
-    # איורים אמנותיים יפים (Watercolor)
-    icon_base = "https://img.icons8.com/external-tulpahn-flat-tulpahn/128/external-"
-    zodiacs = [
-        (21,3,19,4, f"{icon_base}aries-zodiac-tulpahn-flat-tulpahn.png", "טלה"),
-        (20,4,20,5, f"{icon_base}taurus-zodiac-tulpahn-flat-tulpahn.png", "שור"),
-        (21,5,20,6, f"{icon_base}gemini-zodiac-tulpahn-flat-tulpahn.png", "תאומים"),
-        (21,6,22,7, f"{icon_base}cancer-zodiac-tulpahn-flat-tulpahn.png", "סרטן"),
-        (23,7,22,8, f"{icon_base}leo-zodiac-tulpahn-flat-tulpahn.png", "אריה"),
-        (23,8,22,9, f"{icon_base}virgo-zodiac-tulpahn-flat-tulpahn.png", "בתולה"),
-        (23,9,22,10, f"{icon_base}libra-zodiac-tulpahn-flat-tulpahn.png", "מאזניים"),
-        (23,10,21,11, f"{icon_base}scorpio-zodiac-tulpahn-flat-tulpahn.png", "עקרב"),
-        (22,11,21,12, f"{icon_base}sagittarius-zodiac-tulpahn-flat-tulpahn.png", "קשת"),
-        (22,12,19,1, f"{icon_base}capricorn-zodiac-tulpahn-flat-tulpahn.png", "גדי"),
-        (20,1,18,2, f"{icon_base}aquarius-zodiac-tulpahn-flat-tulpahn.png", "דלי"),
-        (19,2,20,3, f"{icon_base}pisces-zodiac-tulpahn-flat-tulpahn.png", "דגים")
-    ]
-    for sd, sm, ed, em, img, name in zodiacs:
-        if (m == sm and d >= sd) or (m == em and d <= ed):
-            return img, name
-    return zodiacs[-1][4], zodiacs[-1][5]
+
+def get_zodiac(d, m):
+    zodiacs = [(21,3,19,4,"טלה ♈"),(20,4,20,5,"שור ♉"),(21,5,20,6,"תאומים ♊"),
+               (21,6,22,7,"סרטן ♋"),(23,7,22,8,"אריה ♌"),(23,8,22,9,"בתולה ♍"),
+               (23,9,22,10,"מאזניים ♎"),(23,10,21,11,"עקרב ♏"),(22,11,21,12,"קשת ♐"),
+               (22,12,19,1,"גדי ♑"),(20,1,18,2,"דלי ♒"),(19,2,20,3,"דגים ♓")]
+    for sd,sm,ed,em,n in zodiacs:
+        if (m==sm and d>=sd) or (m==em and d<=ed): return n
+    return "דגים ♓"
     
 # עיבוד תאריכים
 def process_person(name, bday_date, is_temporary=False):
@@ -47,13 +35,12 @@ def process_person(name, bday_date, is_temporary=False):
         "שם": name,
         "תאריך לועזי": bday_date.strftime('%d/%m/%Y'),
         "תאריך עברי": h_date.hebrew_date_string(),
-        "סמל מזל": z_img,
-        "מזל": z_name,
+        "מזל": get_zodiac(bday_date.day, bday_date.month),
         "גיל": today.year - bday_date.year - ((today.month, today.day) < (bday_date.month, bday_date.day)),
-        "עוד כמה ימים ליום הולדת": (next_bday - today).days,
+        "עוד כמה ימים ליום הולדת": (next_bday - today).days, 
         "חודש": bday_date.month,
         "יום": bday_date.day,
-        "זמני": is_temporary
+        "זמני": is_temporary: is_temporary
     }
 
 if "temp_people" not in st.session_state:
@@ -106,27 +93,12 @@ if this_month_list:
 # ---  רשימת כל החוגגים ---
 st.header("📊 רשימת כל החוגגים")
 if all_data:
-    # מיון הנתונים לפי חודש ויום
     all_sorted = sorted(all_data, key=lambda x: (x["חודש"], x["יום"]))
-    
-    columns_order = ["סמל מזל", "מזל","תאריך עברי", "תאריך לועזי","גיל","שם"]
-    df_all = pd.DataFrame(all_sorted)[columns_order]
-    
-    st.dataframe(
-        df_all.style.apply(lambda x: color_rows(df_all, all_sorted), axis=None),
-        column_config={
-            "שם": st.column_config.TextColumn("שם", width="medium"),
-            # העמודה הזו שואבת את הקישור מ-z_img שהגדרת ב-process_person
-            "סמל מזל": st.column_config.ImageColumn("איור", width="medium"),
-            "מזל": st.column_config.TextColumn("מזל", width="small"),
-            "גיל": st.column_config.NumberColumn("גיל", format="%d"),
-            "תאריך לועזי": st.column_config.TextColumn("לועזי", width="small"),
-            "תאריך עברי": st.column_config.TextColumn("עברי", width="medium"),
-        },
-        hide_index=True,
-        use_container_width=True,
-        height=600 
-    )
+    df_all = pd.DataFrame(all_sorted)[["שם", "תאריך לועזי", "תאריך עברי", "מזל", "גיל"]]
+    st.table(df_all.style.apply(lambda x: color_rows(df_all, all_sorted), axis=None))
+
+st.markdown("---")
+
 # ---  הוספה זמנית ---
 with st.expander("⏱️ הוספה זמנית / רענון"):
     if st.button("🔄 רענון נתונים"):
@@ -140,6 +112,7 @@ with st.expander("⏱️ הוספה זמנית / רענון"):
             if t_name:
                 st.session_state.temp_people.append(process_person(t_name, t_date, is_temporary=True))
                 st.rerun()
+
 
 
 
