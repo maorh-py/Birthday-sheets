@@ -12,21 +12,21 @@ except ImportError:
     from streamlit_gsheets import GSheetsConnection
 # מזלות
 def get_zodiac_info(d, m):
-   
-    icon_base = "https://img.icons8.com/external-flat-icons-inmotus-design/40/external-"
+    # סט איורים אמנותי בסגנון Watercolor - דומה לתמונה שאהבת
+    icon_base = "https://img.icons8.com/external-tulpahn-flat-tulpahn/128/external-"
     zodiacs = [
-       (21,3,19,4, "https://img.icons8.com/external-tulpahn-flat-tulpahn/128/external-aries-zodiac-tulpahn-flat-tulpahn.png", "טלה"),
-        (20,4,20,5, "https://img.icons8.com/external-tulpahn-flat-tulpahn/128/external-taurus-zodiac-tulpahn-flat-tulpahn.png", "שור"),
-        (21,5,20,6, "https://img.icons8.com/external-tulpahn-flat-tulpahn/128/external-gemini-zodiac-tulpahn-flat-tulpahn.png", "תאומים"),
-        (21,6,22,7, "https://img.icons8.com/external-tulpahn-flat-tulpahn/128/external-cancer-zodiac-tulpahn-flat-tulpahn.png", "סרטן"),
-        (23,7,22,8, "https://img.icons8.com/external-tulpahn-flat-tulpahn/128/external-leo-zodiac-tulpahn-flat-tulpahn.png", "אריה"),
-        (23,8,22,9, "https://img.icons8.com/external-tulpahn-flat-tulpahn/128/external-virgo-zodiac-tulpahn-flat-tulpahn.png", "בתולה"),
-        (23,9,22,10, "https://img.icons8.com/external-tulpahn-flat-tulpahn/128/external-libra-zodiac-tulpahn-flat-tulpahn.png", "מאזניים"),
-        (23,10,21,11, "https://img.icons8.com/external-tulpahn-flat-tulpahn/128/external-scorpio-zodiac-tulpahn-flat-tulpahn.png", "עקרב"),
-        (22,11,21,12, "https://img.icons8.com/external-tulpahn-flat-tulpahn/128/external-sagittarius-zodiac-tulpahn-flat-tulpahn.png", "קשת"),
-        (22,12,19,1, "https://img.icons8.com/external-tulpahn-flat-tulpahn/128/external-capricorn-zodiac-tulpahn-flat-tulpahn.png", "גדי"),
-        (20,1,18,2, "https://img.icons8.com/external-tulpahn-flat-tulpahn/128/external-aquarius-zodiac-tulpahn-flat-tulpahn.png", "דלי"),
-        (19,2,20,3, "https://img.icons8.com/external-tulpahn-flat-tulpahn/128/external-pisces-zodiac-tulpahn-flat-tulpahn.png", "דגים")
+        (21,3,19,4, f"{icon_base}aries-zodiac-tulpahn-flat-tulpahn.png", "טלה"),
+        (20,4,20,5, f"{icon_base}taurus-zodiac-tulpahn-flat-tulpahn.png", "שור"),
+        (21,5,20,6, f"{icon_base}gemini-zodiac-tulpahn-flat-tulpahn.png", "תאומים"),
+        (21,6,22,7, f"{icon_base}cancer-zodiac-tulpahn-flat-tulpahn.png", "סרטן"),
+        (23,7,22,8, f"{icon_base}leo-zodiac-tulpahn-flat-tulpahn.png", "אריה"),
+        (23,8,22,9, f"{icon_base}virgo-zodiac-tulpahn-flat-tulpahn.png", "בתולה"),
+        (23,9,22,10, f"{icon_base}libra-zodiac-tulpahn-flat-tulpahn.png", "מאזניים"),
+        (23,10,21,11, f"{icon_base}scorpio-zodiac-tulpahn-flat-tulpahn.png", "עקרב"),
+        (22,11,21,12, f"{icon_base}sagittarius-zodiac-tulpahn-flat-tulpahn.png", "קשת"),
+        (22,12,19,1, f"{icon_base}capricorn-zodiac-tulpahn-flat-tulpahn.png", "גדי"),
+        (20,1,18,2, f"{icon_base}aquarius-zodiac-tulpahn-flat-tulpahn.png", "דלי"),
+        (19,2,20,3, f"{icon_base}pisces-zodiac-tulpahn-flat-tulpahn.png", "דגים")
     ]
     for sd, sm, ed, em, img, name in zodiacs:
         if (m == sm and d >= sd) or (m == em and d <= ed):
@@ -134,6 +134,7 @@ with st.expander("⏱️ הוספה זמנית / רענון"):
             if t_name:
                 st.session_state.temp_people.append(process_person(t_name, t_date, is_temporary=True))
                 st.rerun()
+
 
 
 
