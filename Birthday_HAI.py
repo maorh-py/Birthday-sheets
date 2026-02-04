@@ -40,7 +40,7 @@ def process_person(name, bday_date, is_temporary=False):
         "עוד כמה ימים ליום הולדת": (next_bday - today).days, 
         "חודש": bday_date.month,
         "יום": bday_date.day,
-        "זמני": is_temporary: is_temporary
+        "זמני": is_temporary
     }
 
 if "temp_people" not in st.session_state:
@@ -112,6 +112,7 @@ with st.expander("⏱️ הוספה זמנית / רענון"):
             if t_name:
                 st.session_state.temp_people.append(process_person(t_name, t_date, is_temporary=True))
                 st.rerun()
+
 
 
 
