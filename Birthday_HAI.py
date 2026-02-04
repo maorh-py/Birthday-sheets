@@ -109,7 +109,7 @@ if all_data:
     # מיון הנתונים לפי חודש ויום
     all_sorted = sorted(all_data, key=lambda x: (x["חודש"], x["יום"]))
     
-    columns_order = ["סמל מזל", "תאריך עברי", "תאריך לועזי", "מזל","גיל","שם"]
+    columns_order = ["סמל מזל", "מזל","תאריך עברי", "תאריך לועזי","גיל","שם"]
     df_all = pd.DataFrame(all_sorted)[columns_order]
     
     st.dataframe(
@@ -117,7 +117,7 @@ if all_data:
         column_config={
             "שם": st.column_config.TextColumn("שם", width="medium"),
             # העמודה הזו שואבת את הקישור מ-z_img שהגדרת ב-process_person
-            "סמל מזל": st.column_config.ImageColumn("איור", width="large"),
+            "סמל מזל": st.column_config.ImageColumn("איור", width="medium"),
             "מזל": st.column_config.TextColumn("מזל", width="small"),
             "גיל": st.column_config.NumberColumn("גיל", format="%d"),
             "תאריך לועזי": st.column_config.TextColumn("לועזי", width="small"),
@@ -140,6 +140,7 @@ with st.expander("⏱️ הוספה זמנית / רענון"):
             if t_name:
                 st.session_state.temp_people.append(process_person(t_name, t_date, is_temporary=True))
                 st.rerun()
+
 
 
 
