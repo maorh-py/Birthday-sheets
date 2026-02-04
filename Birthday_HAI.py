@@ -15,19 +15,19 @@ def get_zodiac_info(d, m):
    
     icon_base = "https://img.icons8.com/external-flat-icons-inmotus-design/40/external-"
     zodiacs = [
-        (21,3,19,4, "https://img.icons8.com/clouds/100/aries.png", "טלה"),
-        (20,4,20,5, "https://img.icons8.com/clouds/100/taurus.png", "שור"),
-        (21,5,20,6, "https://img.icons8.com/clouds/100/gemini.png", "תאומים"),
-        (21,6,22,7, "https://img.icons8.com/clouds/100/cancer.png", "סרטן"),
-        (23,7,22,8, "https://img.icons8.com/clouds/100/leo.png", "אריה"),
-        (23,8,22,9, "https://img.icons8.com/clouds/100/virgo.png", "בתולה"),
-        (23,9,22,10, "https://img.icons8.com/clouds/100/libra.png", "מאזניים"),
-        (23,10,21,11, "https://img.icons8.com/clouds/100/scorpio.png", "עקרב"),
-        (22,11,21,12, "https://img.icons8.com/clouds/100/sagittarius.png", "קשת"),
-        (22,12,19,1, "https://img.icons8.com/clouds/100/capricorn.png", "גדי"),
-        (20,1,18,2, "https://img.icons8.com/clouds/100/aquarius.png", "דלי"),
-        (19,2,20,3, "https://img.icons8.com/clouds/100/pisces.png", "דגים")
-    ]
+        (21,3,19,4, "https://img.icons8.com/external-flat-round-vectorslab/100/external-Aries-zodiac-flat-round-vectorslab.png", "טלה"),
+        (20,4,20,5, "https://img.icons8.com/external-flat-round-vectorslab/100/external-Taurus-zodiac-flat-round-vectorslab.png", "שור"),
+        (21,5,20,6, "https://img.icons8.com/external-flat-round-vectorslab/100/external-Gemini-zodiac-flat-round-vectorslab.png", "תאומים"),
+        (21,6,22,7, "https://img.icons8.com/external-flat-round-vectorslab/100/external-Cancer-zodiac-flat-round-vectorslab.png", "סרטן"),
+        (23,7,22,8, "https://img.icons8.com/external-flat-round-vectorslab/100/external-Leo-zodiac-flat-round-vectorslab.png", "אריה"),
+        (23,8,22,9, "https://img.icons8.com/external-flat-round-vectorslab/100/external-Virgo-zodiac-flat-round-vectorslab.png", "בתולה"),
+        (23,9,22,10, "https://img.icons8.com/external-flat-round-vectorslab/100/external-Libra-zodiac-flat-round-vectorslab.png", "מאזניים"),
+        (23,10,21,11, "https://img.icons8.com/external-flat-round-vectorslab/100/external-Scorpio-zodiac-flat-round-vectorslab.png", "עקרב"),
+        (22,11,21,12, "https://img.icons8.com/external-flat-round-vectorslab/100/external-Sagittarius-zodiac-flat-round-vectorslab.png", "קשת"),
+        (22,12,19,1, "https://img.icons8.com/external-flat-round-vectorslab/100/external-Capricorn-zodiac-flat-round-vectorslab.png", "גדי"),
+        (20,1,18,2, "https://img.icons8.com/external-flat-round-vectorslab/100/external-Aquarius-zodiac-flat-round-vectorslab.png", "דלי"),
+        (19,2,20,3, "https://img.icons8.com/external-flat-round-vectorslab/100/external-Pisces-zodiac-flat-round-vectorslab.png", "דגים")
+        [
     for sd, sm, ed, em, img, name in zodiacs:
         if (m == sm and d >= sd) or (m == em and d <= ed):
             return img, name
@@ -132,6 +132,7 @@ with st.expander("⏱️ הוספה זמנית / רענון"):
             if t_name:
                 st.session_state.temp_people.append(process_person(t_name, t_date, is_temporary=True))
                 st.rerun()
+
 
 
 
