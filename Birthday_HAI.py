@@ -11,7 +11,7 @@ try:
 except ImportError:
     from streamlit_gsheets import GSheetsConnection
 
-# פונקציית מזלות מקורית (טקסט + אימוג'י)
+# פונקציית מזלות 
 def get_zodiac(d, m):
     zodiacs = [(21,3,19,4,"טלה ♈"),(20,4,20,5,"שור ♉"),(21,5,20,6,"תאומים ♊"),
                (21,6,22,7,"סרטן ♋"),(23,7,22,8,"אריה ♌"),(23,8,22,9,"בתולה ♍"),
@@ -60,7 +60,7 @@ except: pass
 all_data.extend(st.session_state.temp_people)
 today = date.today()
 
-# --- חוגגים היום ---
+# --- מי חוגג היום ---
 hbd_today = [p for p in all_data if p["חודש"] == today.month and p["יום"] == today.day]
 if hbd_today:
     st.balloons()
@@ -116,6 +116,7 @@ with st.expander("⏱️ הוספה זמנית / רענון"):
             if t_name:
                 st.session_state.temp_people.append(process_person(t_name, t_date, is_temporary=True))
                 st.rerun()
+
 
 
 
