@@ -109,7 +109,7 @@ if all_data:
     # מיון הנתונים לפי חודש ויום
     all_sorted = sorted(all_data, key=lambda x: (x["חודש"], x["יום"]))
     
-    columns_order = [""סמל מזל", "תאריך עברי", "תאריך לועזי", "מזל","גיל","שם"]
+     columns_order = [""סמל מזל", "תאריך עברי", "תאריך לועזי", "מזל","גיל","שם"]
     df_all = pd.DataFrame(all_sorted)[columns_order]
     
     st.dataframe(
@@ -140,6 +140,7 @@ with st.expander("⏱️ הוספה זמנית / רענון"):
             if t_name:
                 st.session_state.temp_people.append(process_person(t_name, t_date, is_temporary=True))
                 st.rerun()
+
 
 
 
