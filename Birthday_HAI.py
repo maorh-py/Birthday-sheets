@@ -105,7 +105,7 @@ if this_month_list:
 st.header("📊 רשימת כל החוגגים")
 if all_data:
     all_sorted = sorted(all_data, key=lambda x: (x["חודש"], x["יום"]))
-    df_all = pd.DataFrame(all_sorted)[["סמל מזל", "מזל", "שם", "תאריך לועזי", "תאריך עברי", "גיל"]]
+   df_all = pd.DataFrame(all_sorted)[["שם","סמל מזל", "מזל", "תאריך לועזי", "תאריך עברי", "גיל"]]
     
     st.dataframe(
     df_all.style.apply(lambda x: color_rows(df_all, all_sorted), axis=None),
@@ -133,6 +133,7 @@ with st.expander("⏱️ הוספה זמנית / רענון"):
             if t_name:
                 st.session_state.temp_people.append(process_person(t_name, t_date, is_temporary=True))
                 st.rerun()
+
 
 
 
