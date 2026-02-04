@@ -108,18 +108,18 @@ st.header("📊 רשימת כל החוגגים")
 if all_data:
     all_sorted = sorted(all_data, key=lambda x: (x["חודש"], x["יום"]))
     
-    # יצירת ה-DataFrame - ודא שהשורה הזו מיושרת שמאלה עד הסוף בתוך ה-if
-    df_all = pd.DataFrame(all_sorted)[["שם", "סמל מזל", "מזל", "גיל", "תאריך לועזי", "תאריך עברי"]]
+    columns_order = ["גיל", "תאריך עברי", "תאריך לועזי", "מזל", "סמל מזל", "שם"]
+    df_all = pd.DataFrame(all_sorted)[columns_order]
     
     st.dataframe(
         df_all.style.apply(lambda x: color_rows(df_all, all_sorted), axis=None),
         column_config={
             "שם": st.column_config.TextColumn("שם", width="medium"),
-            "סמל מזל": st.column_config.ImageColumn(" ", width="large"), # התמונה האמנותית
+            "סמל מזל": st.column_config.ImageColumn(" ", width="medium"),
             "מזל": st.column_config.TextColumn("מזל", width="small"),
-            "גיל": st.column_config.NumberColumn("גיל", format="%d", width="small"),
             "תאריך לועזי": st.column_config.TextColumn("לועזי", width="small"),
             "תאריך עברי": st.column_config.TextColumn("עברי", width="medium"),
+            "גיל": st.column_config.NumberColumn("גיל", format="%d", width="small"),
         },
         hide_index=True,
         use_container_width=True,
@@ -139,6 +139,7 @@ with st.expander("⏱️ הוספה זמנית / רענון"):
             if t_name:
                 st.session_state.temp_people.append(process_person(t_name, t_date, is_temporary=True))
                 st.rerun()
+
 
 
 
