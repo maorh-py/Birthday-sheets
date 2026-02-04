@@ -115,7 +115,7 @@ if all_data:
             "גיל": st.column_config.NumberColumn("גיל", format="%d")
         },
         hide_index=True,
-        use_container_width=True
+        use_container_width=True,
         height=580  # גובה שמציג כ-15 שורות לפני שצריך לגלול
     )
 
@@ -132,4 +132,5 @@ with st.expander("⏱️ הוספה זמנית / רענון"):
             if t_name:
                 st.session_state.temp_people.append(process_person(t_name, t_date, is_temporary=True))
                 st.rerun()
+
 
