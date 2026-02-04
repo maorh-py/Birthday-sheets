@@ -109,13 +109,15 @@ if all_data:
     df_all = pd.DataFrame(all_sorted)[["סמל מזל", "מזל", "שם", "תאריך לועזי", "תאריך עברי", "גיל"]]
     
     st.dataframe(
-        df_all.style.apply(lambda x: color_rows(df_all, all_sorted), axis=None),
-        column_config={
-            "סמל מזל": st.column_config.ImageColumn(" ", width="large"),
-            "גיל": st.column_config.NumberColumn("גיל", format="%d")
-        },
-        hide_index=True,
-        use_container_width=True,
+    df_all.style.apply(lambda x: color_rows(df_all, all_sorted), axis=None),
+    column_config={
+        # השם כאן חייב להיות זהה לשם העמודה ב-DataFrame
+        "סמל מזל": st.column_config.ImageColumn(" ", width="large"), 
+        "מזל": st.column_config.TextColumn("מזל"),
+        "גיל": st.column_config.NumberColumn("גיל", format="%d")
+    },
+    hide_index=True,
+    use_container_width=True,
         height=500  # גובה שמציג כ-15 שורות לפני שצריך לגלול
     )
 
@@ -132,6 +134,7 @@ with st.expander("⏱️ הוספה זמנית / רענון"):
             if t_name:
                 st.session_state.temp_people.append(process_person(t_name, t_date, is_temporary=True))
                 st.rerun()
+
 
 
 
