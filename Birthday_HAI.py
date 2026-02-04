@@ -108,7 +108,6 @@ st.header("📊 רשימת כל החוגגים")
 if all_data:
     all_sorted = sorted(all_data, key=lambda x: (x["חודש"], x["יום"]))
     
-    # שינינו את הסדר: שם מופיע ראשון ברשימה כדי שיהיה ראשון מימין במסך
     columns_order = ["שם", "סמל מזל", "מזל", "גיל", "תאריך לועזי", "תאריך עברי"]
     df_all = pd.DataFrame(all_sorted)[columns_order]
     
@@ -116,7 +115,7 @@ if all_data:
         df_all.style.apply(lambda x: color_rows(df_all, all_sorted), axis=None),
         column_config={
             "שם": st.column_config.TextColumn("שם", width="medium"),
-            # שינינו את הרווח ל-"large" כדי שהאיור האמנותי יהיה גדול וברור
+            # כאן מוגדר האיור האמנותי - נתנו לו רוחב "large" כדי שיהיה דומיננטי
             "סמל מזל": st.column_config.ImageColumn("איור", width="large"),
             "מזל": st.column_config.TextColumn("מזל", width="small"),
             "גיל": st.column_config.NumberColumn("גיל", format="%d", width="small"),
@@ -127,7 +126,6 @@ if all_data:
         use_container_width=True,
         height=600 
     )
-
 # ---  הוספה זמנית ---
 with st.expander("⏱️ הוספה זמנית / רענון"):
     if st.button("🔄 רענון נתונים"):
@@ -141,6 +139,7 @@ with st.expander("⏱️ הוספה זמנית / רענון"):
             if t_name:
                 st.session_state.temp_people.append(process_person(t_name, t_date, is_temporary=True))
                 st.rerun()
+
 
 
 
