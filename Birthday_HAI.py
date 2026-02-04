@@ -15,18 +15,19 @@ def get_zodiac_info(d, m):
     # איורים אמנותיים יפים (Watercolor)
     icon_base = "https://img.icons8.com/external-tulpahn-flat-tulpahn/128/external-"
     zodiacs = [
-        (21,3,19,4, "https://cdn-icons-png.flaticon.com/512/47/47248.png", "טלה"),
-        (20,4,20,5, "https://cdn-icons-png.flaticon.com/512/47/47340.png", "שור"),
-        (21,5,20,6, "https://cdn-icons-png.flaticon.com/512/47/47232.png", "תאומים"),
-        (21,6,22,7, "https://cdn-icons-png.flaticon.com/512/47/47303.png", "סרטן"),
-        (23,7,22,8, "https://cdn-icons-png.flaticon.com/512/47/47274.png", "אריה"),
-        (23,8,22,9, "https://cdn-icons-png.flaticon.com/512/47/47352.png", "בתולה"),
-        (23,9,22,10, "https://cdn-icons-png.flaticon.com/512/47/47285.png", "מאזניים"),
-        (23,10,21,11, "https://cdn-icons-png.flaticon.com/512/47/47321.png", "עקרב"),
-        (22,11,21,12, "https://cdn-icons-png.flaticon.com/512/47/47312.png", "קשת"),
-        (22,12,19,1, "https://cdn-icons-png.flaticon.com/512/47/47239.png", "גדי"),
-        (20,1,18,2, "https://cdn-icons-png.flaticon.com/512/47/47211.png", "דלי"),
-        (19,2,20,3, "https://cdn-icons-png.flaticon.com/512/47/47293.png", "דגים")
+        zodiacs = [
+        (21,3,19,4, f"{icon_base}Aries-zodiac-flat-icons-inmotus-design.png", "טלה"),
+        (20,4,20,5, f"{icon_base}Taurus-zodiac-flat-icons-inmotus-design.png", "שור"),
+        (21,5,20,6, f"{icon_base}Gemini-zodiac-flat-icons-inmotus-design.png", "תאומים"),
+        (21,6,22,7, f"{icon_base}Cancer-zodiac-flat-icons-inmotus-design.png", "סרטן"),
+        (23,7,22,8, f"{icon_base}Leo-zodiac-flat-icons-inmotus-design.png", "אריה"),
+        (23,8,22,9, f"{icon_base}Virgo-zodiac-flat-icons-inmotus-design.png", "בתולה"),
+        (23,9,22,10, f"{icon_base}Libra-zodiac-flat-icons-inmotus-design.png", "מאזניים"),
+        (23,10,21,11, f"{icon_base}Scorpio-zodiac-flat-icons-inmotus-design.png", "עקרב"),
+        (22,11,21,12, f"{icon_base}Sagittarius-zodiac-flat-icons-inmotus-design.png", "קשת"),
+        (22,12,19,1, f"{icon_base}Capricorn-zodiac-flat-icons-inmotus-design.png", "גדי"),
+        (20,1,18,2, f"{icon_base}Aquarius-zodiac-flat-icons-inmotus-design.png", "דלי"),
+        (19,2,20,3, f"{icon_base}Pisces-zodiac-flat-icons-inmotus-design.png", "דגים")
     ]
     for sd, sm, ed, em, img, name in zodiacs:
         if (m == sm and d >= sd) or (m == em and d <= ed):
@@ -140,6 +141,7 @@ with st.expander("⏱️ הוספה זמנית / רענון"):
             if t_name:
                 st.session_state.temp_people.append(process_person(t_name, t_date, is_temporary=True))
                 st.rerun()
+
 
 
 
