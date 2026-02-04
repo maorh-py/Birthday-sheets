@@ -27,7 +27,7 @@ def get_zodiac_info(d, m):
         (22,12,19,1, "https://img.icons8.com/external-flat-round-vectorslab/100/external-Capricorn-zodiac-flat-round-vectorslab.png", "גדי"),
         (20,1,18,2, "https://img.icons8.com/external-flat-round-vectorslab/100/external-Aquarius-zodiac-flat-round-vectorslab.png", "דלי"),
         (19,2,20,3, "https://img.icons8.com/external-flat-round-vectorslab/100/external-Pisces-zodiac-flat-round-vectorslab.png", "דגים")
-        [
+    ]
     for sd, sm, ed, em, img, name in zodiacs:
         if (m == sm and d >= sd) or (m == em and d <= ed):
             return img, name
@@ -132,6 +132,7 @@ with st.expander("⏱️ הוספה זמנית / רענון"):
             if t_name:
                 st.session_state.temp_people.append(process_person(t_name, t_date, is_temporary=True))
                 st.rerun()
+
 
 
 
