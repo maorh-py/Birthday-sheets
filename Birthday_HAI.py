@@ -47,27 +47,47 @@ if "temp_people" not in st.session_state:
 all_data = []
 
 # טעינת נתונים מגוגל שיטס
+# קוד לאפליקציה השנייה ב-Branch החדש
 try:
     conn = st.connection("gsheets", type=GSheetsConnection)
+    url = st.secrets["connections"]["gsheets"]["spreadsheet"]
+    
+    # 1. ננסה לקרוא את הלשונית "Data"
+    df_debug = conn.read(spreadsheet=url, worksheet="Data", ttl=0)
+    
+    st.write("### 🔍 בדיקת מעבדה (Branch: dev)")
+    st.write(f"נמצאו {len(df_debug)} שורות בלשונית Data.")
+    
+    # הצגת שמות העמודות כפי שהקוד רואה אותן
+    st.write("שמות העמודות בגיליון:", df_debug.columns.tolist())
+    
+    # הצגת 5 השורות הראשונות כדי לראות את התוכן
+    st.write("תצוגה מקדימה של הנתונים:")
+    st.dataframe(df_debug.head())
 
-    if "connections" in st.secrets and "gsheets" in st.secrets["connections"]:
-        spreadsheet_url = st.secrets["connections"]["gsheets"]["spreadsheet"]
+    # 2. לוגיקת העיבוד (עם 'תפיסה' רחבה יותר)
+    all_data = []
+    for index, row in df_debug.iterrows():
+        # ניסיון גמיש: מחפשים עמודה שמתחילה ב-Full או ב-Birthday
+        # זה עוזר אם יש רווחים נסתרים בשם העמודה
+        name_col = [c for c in df_debug.columns if 'Full' in str(c)]
+        date_col = [c for c in df_debug.columns if 'Birth' in str(c)]
         
-        df_raw = conn.read(spreadsheet=spreadsheet_url, ttl=0).dropna(how="all")
-
-        for _, row in df_raw.iterrows():
-            try:
-                b_date = pd.to_datetime(row['Birthday'], dayfirst=True).date()
-                all_data.append(process_person(row['Full_Name'], b_date))
-            except:
-                continue
-    else:
-        st.error("לא נמצא קישור לאקסל ב-Secrets של האפליקציה.")
-        st.stop()
+        if name_col and date_col:
+            name = row[name_col[0]]
+            b_day = row[date_col[0]]
+            
+            if pd.notnull(name) and pd.notnull(b_day):
+                try:
+                    b_date = pd.to_datetime(b_day, dayfirst=True).date()
+                    all_data.append(process_person(str(name), b_date))
+                except:
+                    continue
 
 except Exception as e:
-    st.error(f"שגיאה בטעינת הנתונים: {e}")
+    st.error(f"שגיאה קריטית בברנץ': {e}")
 
+#-------------------------------------------------------------------------------------------------------
 # הוספת אנשים זמניים מה-session_state אם יש
 if 'temp_people' in st.session_state:
     all_data.extend(st.session_state.temp_people)
@@ -145,6 +165,7 @@ if spreadsheet_url: st.link_button("🔗 פתח אקסל לעריכה קבועה
 
 
 st.link_button("➕ הוסף בן משפחה חדש", "https://docs.google.com/forms/d/e/1FAIpQLSdcsuBKHO_eQ860_Lmjim21XC1P1gUnlB8oZaolH0PkmlVBsA/viewform?usp=publish-editor")
+
 
 
 
