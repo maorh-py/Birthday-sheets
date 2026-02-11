@@ -148,12 +148,13 @@ with st.expander("⏱️ הוספה זמנית / רענון"):
 
 
 # --- הוספה קבועה ---
-st.subheader("📌 הוספה קבועה")
-if spreadsheet_url: st.link_button("🔗 פתח אקסל לעריכה קבועה", spreadsheet_url)
+#st.subheader("📌 הוספה קבועה")
+#if spreadsheet_url: st.link_button("🔗 פתח אקסל לעריכה קבועה", spreadsheet_url)
 
 
 
 st.link_button("➕ הוסף בן משפחה חדש", "https://docs.google.com/forms/d/e/1FAIpQLSdcsuBKHO_eQ860_Lmjim21XC1P1gUnlB8oZaolH0PkmlVBsA/viewform?usp=publish-editor")
+
 
 
 
