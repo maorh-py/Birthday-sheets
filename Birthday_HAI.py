@@ -132,24 +132,12 @@ if all_data:
         height=600 
     )
 
-# --- הוספה זמנית ---
-#with st.expander("⏱️ הוספה זמנית / רענון"):
-    
-    #with st.form("temp_add", clear_on_submit=True):
-     #   c1, c2 = st.columns(2)
-    #    with c1: t_name = st.text_input("שם:")
-     #   with c2: t_date = st.date_input("תאריך לידה:", value=date(2000, 1, 1))
-    #    if st.form_submit_button("הוסף"):
-   #         if t_name:
-   #             st.session_state.temp_people.append(process_person(t_name, t_date, is_temporary=True))
-   #             st.rerun()
-
-
 # ---   הוספה רשימה ורענון ---
 if st.button("🔄 רענון נתונים"):
         st.cache_data.clear()
         st.rerun()
 st.link_button("➕ הוסף בן משפחה חדש", "https://docs.google.com/forms/d/e/1FAIpQLSdcsuBKHO_eQ860_Lmjim21XC1P1gUnlB8oZaolH0PkmlVBsA/viewform?usp=publish-editor")
+
 
 
 
