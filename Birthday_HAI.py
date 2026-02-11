@@ -3,6 +3,7 @@ import pandas as pd
 from datetime import date
 from pyluach import dates
 import re
+from streamlit_gsheets import GSheetsConnection
 
 # הגדרות דף
 st.set_page_config(page_title="לוח ימי הולדת משפחתי", layout="centered")
@@ -50,48 +51,38 @@ all_data = []
 # טעינת נתונים מגוגל שיטס
 
 try:
-    # 1. שליפת הקישור וניקוי מוחלט
-    if "connections" in st.secrets and "gsheets" in st.secrets["connections"]:
-        raw_url = st.secrets["connections"]["gsheets"]["spreadsheet"]
-        
-        # חילוץ ה-ID של הגיליון בלבד
-        match = re.search(r"/d/([a-zA-Z0-9-_]+)", raw_url)
-        if match:
-            sheet_id = match.group(1)
-            # בניית הקישור לייצוא CSV - הדרך הכי בטוחה
-            # וודא ש-gid=0 הוא אכן ה-ID של לשונית Data
-            csv_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid=0"
-            
-            # 2. קריאה באמצעות Pandas
-            df = pd.read_csv(csv_url)
+    # חיבור רגיל באמצעות ה-Secrets התקין שלך
+    conn = st.connection("gsheets", type=GSheetsConnection)
+    url = st.secrets["connections"]["gsheets"]["spreadsheet"]
+    
+    # קריאה מלשונית Data בלבד
+    df = conn.read(spreadsheet=url, worksheet="Data", ttl=0)
 
-            if not df.empty:
-                # ניקוי רווחים משמות העמודות
-                df.columns = df.columns.str.strip()
+    if df is not None and not df.empty:
+        # --- שלב קריטי: ניקוי כותרות ורווחים ---
+        df.columns = df.columns.str.strip() # מסיר רווחים משמות העמודות
+        df = df.dropna(how="all")          # מסיר שורות ריקות לחלוטין
+        
+        for _, row in df.iterrows():
+            try:
+                # שליפת נתונים
+                name = row.get('Full_Name')
+                b_day = row.get('Birthday')
                 
-                for _, row in df.iterrows():
-                    try:
-                        name = row.get('Full_Name')
-                        b_day = row.get('Birthday')
-                        if pd.notnull(name) and pd.notnull(b_day):
-                            b_date = pd.to_datetime(b_day, dayfirst=True).date()
-                            # כאן הקוד שלך ממשיך לעיבוד
-                            all_data.append(process_person(str(name), b_date))
-                    except:
-                        continue
-                
-                if all_data:
-                    st.success(f"✅ הצלחתי! נטענו {len(all_data)} חוגגים מה-Branch החדש.")
-            else:
-                st.warning("הגיליון נקרא אך הוא ריק.")
-        else:
-            st.error("לא נמצא ID תקין בקישור ה-Spreadsheet.")
-    else:
-        st.error("חסר קישור ב-Secrets (connections.gsheets.spreadsheet).")
+                if pd.notnull(name) and pd.notnull(b_day):
+                    # המרה בטוחה לתאריך
+                    b_date = pd.to_datetime(b_day, dayfirst=True).date()
+                    all_data.append(process_person(str(name), b_date))
+            except:
+                continue
+
+    if not all_data:
+        st.warning("החיבור הצליח, אך לא נמצאו נתונים תקינים בעמודות Full_Name ו-Birthday.")
+        # הדפסה זמנית כדי שתראה מה הגיע מהאקסל
+        st.write("עמודות שנמצאו בפועל:", df.columns.tolist())
 
 except Exception as e:
-    # אם עדיין יש 400, זה כנראה בגלל שהגיליון לא פתוח ל-Anyone with the link
-    st.error(f"שגיאה: {e}")
+    st.error(f"שגיאה בחיבור (400): {e}")
 #-------------------------------------------------------------------------------------------------------
 # הוספת אנשים זמניים מה-session_state אם יש
 if 'temp_people' in st.session_state:
@@ -170,6 +161,7 @@ if spreadsheet_url: st.link_button("🔗 פתח אקסל לעריכה קבועה
 
 
 st.link_button("➕ הוסף בן משפחה חדש", "https://docs.google.com/forms/d/e/1FAIpQLSdcsuBKHO_eQ860_Lmjim21XC1P1gUnlB8oZaolH0PkmlVBsA/viewform?usp=publish-editor")
+
 
 
 
