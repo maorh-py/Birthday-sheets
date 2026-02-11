@@ -97,7 +97,7 @@ def color_rows(df, original_list):
     return colors
 
 # --- טבלת החודש ---
-st.header(f"📅 חגיגות קרובות")
+st.header(f" חגיגות החודש")
 this_month_list = sorted([p for p in all_data if p["חודש"] == today.month and p["יום"] >= today.day], key=lambda x: x["יום"])
 
 if this_month_list:
@@ -137,6 +137,7 @@ with st.expander("⏱️ הוספה זמנית / רענון"):
             if t_name:
                 st.session_state.temp_people.append(process_person(t_name, t_date, is_temporary=True))
                 st.rerun()
+
 
 
 
