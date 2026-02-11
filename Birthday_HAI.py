@@ -79,23 +79,14 @@ hbd_today = [p for p in all_data if p["חודש"] == today.month and p["יום"]
 if hbd_today:
     st.balloons()
     for p in hbd_today:
-        st.markdown(f"""
-            <div style="text-align: center; border: 3px solid #FF4B4B; border-radius: 20px; padding: 20px; background-color: #FFF5F5; margin-bottom: 20px; font-family: sans-serif;">
-                
-                <div style="font-size: 40px; color: #FF4B4B; font-weight: bold; margin-bottom: 5px;">
-                    🎈 מזל טוב 🎈
-                </div>
-                
-                <div style="font-size: 60px; font-weight: bold; color: #FF4B4B; margin-bottom: 5px;">
-                    ✨ {p['שם']} ✨
-                </div>
-                
-                <div style="font-size: 35px; color: #31333F;">
-                    🎂 חוגג/ת היום {p['גיל']} 🎂
-                </div>
-                
+        html_content = f"""
+            <div style="text-align: center; border: 3px solid #FF4B4B; border-radius: 20px; padding: 20px; background-color: #FFF5F5; margin-bottom: 20px; direction: rtl;">
+                <div style="font-size: 40px; margin-bottom: 10px;">🎈 מזל טוב 🎈</div>
+                <div style="font-size: 60px; font-weight: bold; color: #FF4B4B; margin-bottom: 10px;">{p['שם']}</div>
+                <div style="font-size: 30px; color: #31333F;">חוגג/ת היום {p['גיל']} 🎂</div>
             </div>
-        """, unsafe_allow_html=True)
+        """
+        st.markdown(html_content, unsafe_allow_html=True)
 
 # פונקציית צביעה
 def color_rows(df, original_list):
@@ -146,6 +137,7 @@ with st.expander("⏱️ הוספה זמנית / רענון"):
             if t_name:
                 st.session_state.temp_people.append(process_person(t_name, t_date, is_temporary=True))
                 st.rerun()
+
 
 
 
