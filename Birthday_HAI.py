@@ -49,39 +49,27 @@ all_data = []
 # טעינת נתונים מגוגל שיטס
 try:
     conn = st.connection("gsheets", type=GSheetsConnection)
-    # שימוש בקישור הישיר מה-Secrets
-    url = st.secrets["connections"]["gsheets"]["spreadsheet"]
+    spreadsheet_url = st.secrets["connections"]["gsheets"]["spreadsheet"]
 
-    # --- קריאת לשונית Data ---
-    try:
-        # כאן חשוב שהשם יהיה בדיוק כמו בטאב: Data
-        df1 = conn.read(spreadsheet=url, worksheet="Data", ttl=0)
-        if not df1.empty:
-            for _, row in df1.dropna(how="all").iterrows():
-                try:
-                    all_data.append(process_person(row['Full_Name'], pd.to_datetime(row['Birthday'], dayfirst=True).date()))
-                except: continue
-    except Exception as e:
-        st.error(f"שגיאה בלשונית Data: {e}")
+    # קריאה פשוטה מהלשונית היחידה שהייתה לנו בהתחלה
+    # וודא ששם הלשונית באקסל הוא אכן Data
+    df = conn.read(spreadsheet=spreadsheet_url, worksheet="Data", ttl=0)
+    df = df.dropna(how="all")
 
-    # --- קריאת לשונית Form_Responses ---
-    try:
-        # כאן חשוב שהשם יהיה בדיוק כמו בטאב: Form_Responses
-        df2 = conn.read(spreadsheet=url, worksheet="Form_Responses", ttl=0)
-        if not df2.empty:
-            for _, row in df2.dropna(how="all").iterrows():
-                try:
-                    # שימוש בשמות העמודות החדשים מהטופס
-                    name = row['שם מלא']
-                    # גוגל פורמס שולח תאריך בפורמט סטנדרטי בד"כ
-                    b_date = pd.to_datetime(row['תאריך לידה']).date()
-                    all_data.append(process_person(name, b_date))
-                except: continue
-    except Exception as e:
-        st.error(f"שגיאה בלשונית Form_Responses: {e}")
+    for _, row in df.iterrows():
+        try:
+            name = row['Full_Name']
+            # המרת התאריך - מוודא שהפורמט הוא יום/חודש/שנה
+            b_date = pd.to_datetime(row['Birthday'], dayfirst=True).date()
+            
+            # עיבוד הנתונים לרשימה הכללית
+            all_data.append(process_person(name, b_date))
+        except:
+            continue
 
 except Exception as e:
-    st.error(f"שגיאת חיבור כללית: {e}")
+    st.error(f"שגיאת חיבור: {e}")
+
 
 # הוספת אנשים זמניים מה-session_state אם יש
 if 'temp_people' in st.session_state:
@@ -160,6 +148,7 @@ if spreadsheet_url: st.link_button("🔗 פתח אקסל לעריכה קבועה
 
 
 st.link_button("➕ הוסף בן משפחה חדש", "https://docs.google.com/forms/d/e/1FAIpQLSdcsuBKHO_eQ860_Lmjim21XC1P1gUnlB8oZaolH0PkmlVBsA/viewform?usp=publish-editor")
+
 
 
 
