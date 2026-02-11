@@ -136,8 +136,12 @@ if all_data:
 if st.button("🔄 רענון נתונים"):
         st.cache_data.clear()
         st.rerun()
-st.link_button("➕ הוסף בן משפחה חדש", "https://docs.google.com/forms/d/e/1FAIpQLSdcsuBKHO_eQ860_Lmjim21XC1P1gUnlB8oZaolH0PkmlVBsA/viewform?usp=publish-editor")
+#st.link_button("➕ הוסף בן משפחה חדש", "https://docs.google.com/forms/d/e/1FAIpQLSdcsuBKHO_eQ860_Lmjim21XC1P1gUnlB8oZaolH0PkmlVBsA/viewform?usp=publish-editor")
 
+form_link = st.secrets["gsheets"].get("form_url", "#")
+
+# יצירת הכפתור הדינמי
+st.link_button("➕ הוסף בן משפחה חדש", form_link)
 
 
 
