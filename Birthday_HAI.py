@@ -4,6 +4,7 @@ from datetime import date
 from pyluach import dates
 import re
 from streamlit_gsheets import GSheetsConnection
+import urllib.parse
 
 # הגדרות דף
 st.set_page_config(page_title="לוח ימי הולדת משפחתי", layout="centered")
@@ -49,19 +50,31 @@ if "temp_people" not in st.session_state:
 all_data = []
 
 # טעינת נתונים מגוגל שיטס
+
+
+all_data = []
+
 try:
-    # שליפת הקישור מה-Secrets
-    base_url = st.secrets["connections"]["gsheets"]["spreadsheet"]
+    # 1. שליפת הקישור וניקוי בסיסי
+    raw_url = st.secrets["connections"]["gsheets"]["spreadsheet"]
     
-    # ניקוי הקישור כדי לוודא שהוא בפורמט הנכון לייצוא
-    # אנחנו מחליפים את ה-edit ב-export
-    csv_url = base_url.split('/edit')[0] + '/gviz/tq?tqx=out:csv&sheet=Data'
+    # חילוץ ה-ID הבסיסי (מוודא שאין שאריות של /edit בסוף)
+    base_url = raw_url.split('/edit')[0].split('/view')[0]
     
-    # קריאת הנתונים
+    # 2. בניית שאילתת ה-CSV (זו הדרך המדויקת ביותר למנוע 404)
+    # אנחנו משתמשים בפרמטר sheet כדי למצוא את "Data"
+    params = {
+        'tqx': 'out:csv',
+        'sheet': 'Data'
+    }
+    query_string = urllib.parse.urlencode(params)
+    csv_url = f"{base_url}/gviz/tq?{query_string}"
+
+    # 3. קריאה באמצעות פנדס
     df = pd.read_csv(csv_url)
 
     if not df.empty:
-        # ניקוי כותרות מרווחים
+        # ניקוי כותרות
         df.columns = df.columns.str.strip()
         
         for _, row in df.iterrows():
@@ -70,22 +83,21 @@ try:
                 b_day = row.get('Birthday')
                 
                 if pd.notnull(name) and pd.notnull(b_day):
+                    # המרה בטוחה
                     b_date = pd.to_datetime(b_day, dayfirst=True).date()
-                    # כאן הקריאה לפונקציית העיבוד שלך
                     all_data.append(process_person(str(name), b_date))
             except:
                 continue
         
         if all_data:
-            st.success(f"🎉 הצלחתי! נטענו {len(all_data)} חוגגים.")
+            st.success(f"נמצאו {len(all_data)} חוגגים!")
         else:
-            st.warning("התחברתי ללשונית Data, אבל לא מצאתי נתונים בעמודות Full_Name ו-Birthday.")
-            st.write("עמודות שנמצאו:", df.columns.tolist())
+            st.warning("החיבור הצליח, אך לא נמצאו נתונים תחת הכותרות Full_Name ו-Birthday.")
     else:
-        st.error("הלשונית 'Data' נמצאה אבל היא ריקה.")
+        st.error("הגיליון נקרא אך הוא נראה ריק.")
 
 except Exception as e:
-    st.error(f"שגיאה (404/400): {e}")
+    st.error(f"שגיאה בניסיון הגישה: {e}")
 #-------------------------------------------------------------------------------------------------------
 # הוספת אנשים זמניים מה-session_state אם יש
 if 'temp_people' in st.session_state:
@@ -164,6 +176,7 @@ if spreadsheet_url: st.link_button("🔗 פתח אקסל לעריכה קבועה
 
 
 st.link_button("➕ הוסף בן משפחה חדש", "https://docs.google.com/forms/d/e/1FAIpQLSdcsuBKHO_eQ860_Lmjim21XC1P1gUnlB8oZaolH0PkmlVBsA/viewform?usp=publish-editor")
+
 
 
 
