@@ -51,47 +51,47 @@ all_data = []
 
 try:
     # 1. שליפת הקישור וניקוי מוחלט
-    raw_url = st.secrets["connections"]["gsheets"]["spreadsheet"]
-    
-    # חילוץ ה-ID של הגיליון בלבד באמצעות Regex
-    # זה מוודא שלא משנה מה הדבקת ב-Secrets, נקבל רק את ה-ID
-    match = re.search(r"/d/([a-zA-Z0-9-_]+)", raw_url)
-    if not match:
-        st.error("לא הצלחתי למצוא ID תקין של גיליון בקישור ב-Secrets.")
-        st.stop()
+    if "connections" in st.secrets and "gsheets" in st.secrets["connections"]:
+        raw_url = st.secrets["connections"]["gsheets"]["spreadsheet"]
         
-    sheet_id = match.group(1)
-    
-    # בניית הקישור מחדש בצורה הכי נקייה שיש לייצוא CSV
-    # כאן אנחנו מגדירים את ה-GID של לשונית Data (למשל 0)
-    gid = "0" 
-    csv_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid={gid}"
-    
-    # הדפסת הקישור (רק לבדיקה בברנץ', אחר כך נמחק)
-    # st.write(f"הקישור שנוצר: {csv_url}")
+        # חילוץ ה-ID של הגיליון בלבד
+        match = re.search(r"/d/([a-zA-Z0-9-_]+)", raw_url)
+        if match:
+            sheet_id = match.group(1)
+            # בניית הקישור לייצוא CSV - הדרך הכי בטוחה
+            # וודא ש-gid=0 הוא אכן ה-ID של לשונית Data
+            csv_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid=0"
+            
+            # 2. קריאה באמצעות Pandas
+            df = pd.read_csv(csv_url)
 
-    # 2. קריאה באמצעות Pandas
-    # הוספת storage_options עוזרת לעקוף חסימות מסוימות
-    df = pd.read_csv(csv_url)
-
-    if not df.empty:
-        st.write(f"✅ הצלחתי! נקראו {len(df)} שורות")
-        df.columns = df.columns.str.strip()
-        
-        for _, row in df.iterrows():
-            try:
-                name = row.get('Full_Name')
-                b_day = row.get('Birthday')
-                if pd.notnull(name) and pd.notnull(b_day):
-                    b_date = pd.to_datetime(b_day, dayfirst=True).date()
-                    all_data.append(process_person(str(name), b_date))
-            except:
-                continue
+            if not df.empty:
+                # ניקוי רווחים משמות העמודות
+                df.columns = df.columns.str.strip()
+                
+                for _, row in df.iterrows():
+                    try:
+                        name = row.get('Full_Name')
+                        b_day = row.get('Birthday')
+                        if pd.notnull(name) and pd.notnull(b_day):
+                            b_date = pd.to_datetime(b_day, dayfirst=True).date()
+                            # כאן הקוד שלך ממשיך לעיבוד
+                            all_data.append(process_person(str(name), b_date))
+                    except:
+                        continue
+                
+                if all_data:
+                    st.success(f"✅ הצלחתי! נטענו {len(all_data)} חוגגים מה-Branch החדש.")
+            else:
+                st.warning("הגיליון נקרא אך הוא ריק.")
+        else:
+            st.error("לא נמצא ID תקין בקישור ה-Spreadsheet.")
     else:
-        st.warning("הגיליון נקרא אך הוא ריק.")
+        st.error("חסר קישור ב-Secrets (connections.gsheets.spreadsheet).")
 
 except Exception as e:
-    st.error(f"שגיאה (400 בדרך כלל אומר שהקישור שבור): {e}")
+    # אם עדיין יש 400, זה כנראה בגלל שהגיליון לא פתוח ל-Anyone with the link
+    st.error(f"שגיאה: {e}")
 #-------------------------------------------------------------------------------------------------------
 # הוספת אנשים זמניים מה-session_state אם יש
 if 'temp_people' in st.session_state:
@@ -170,6 +170,7 @@ if spreadsheet_url: st.link_button("🔗 פתח אקסל לעריכה קבועה
 
 
 st.link_button("➕ הוסף בן משפחה חדש", "https://docs.google.com/forms/d/e/1FAIpQLSdcsuBKHO_eQ860_Lmjim21XC1P1gUnlB8oZaolH0PkmlVBsA/viewform?usp=publish-editor")
+
 
 
 
