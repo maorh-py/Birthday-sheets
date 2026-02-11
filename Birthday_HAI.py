@@ -133,10 +133,8 @@ if all_data:
     )
 
 # --- הוספה זמנית ---
-with st.expander("⏱️ הוספה זמנית / רענון"):
-    if st.button("🔄 רענון נתונים"):
-        st.cache_data.clear()
-        st.rerun()
+#with st.expander("⏱️ הוספה זמנית / רענון"):
+    
     #with st.form("temp_add", clear_on_submit=True):
      #   c1, c2 = st.columns(2)
     #    with c1: t_name = st.text_input("שם:")
@@ -147,9 +145,12 @@ with st.expander("⏱️ הוספה זמנית / רענון"):
    #             st.rerun()
 
 
-# --- הוספה רשימה ---
-
+# ---   הוספה רשימה ורענון ---
+if st.button("🔄 רענון נתונים"):
+        st.cache_data.clear()
+        st.rerun()
 st.link_button("➕ הוסף בן משפחה חדש", "https://docs.google.com/forms/d/e/1FAIpQLSdcsuBKHO_eQ860_Lmjim21XC1P1gUnlB8oZaolH0PkmlVBsA/viewform?usp=publish-editor")
+
 
 
 
