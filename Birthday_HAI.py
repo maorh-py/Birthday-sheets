@@ -49,27 +49,24 @@ all_data = []
 # טעינת נתונים מגוגל שיטס
 try:
     conn = st.connection("gsheets", type=GSheetsConnection)
-    spreadsheet_url = st.secrets["connections"]["gsheets"]["spreadsheet"]
 
-    # קריאה פשוטה מהלשונית היחידה שהייתה לנו בהתחלה
-    # וודא ששם הלשונית באקסל הוא אכן Data
-    df = conn.read(spreadsheet=spreadsheet_url, worksheet="Data", ttl=0)
-    df = df.dropna(how="all")
+    if "connections" in st.secrets and "gsheets" in st.secrets["connections"]:
+        spreadsheet_url = st.secrets["connections"]["gsheets"]["spreadsheet"]
+        
+        df_raw = conn.read(spreadsheet=spreadsheet_url, ttl=0).dropna(how="all")
 
-    for _, row in df.iterrows():
-        try:
-            name = row['Full_Name']
-            # המרת התאריך - מוודא שהפורמט הוא יום/חודש/שנה
-            b_date = pd.to_datetime(row['Birthday'], dayfirst=True).date()
-            
-            # עיבוד הנתונים לרשימה הכללית
-            all_data.append(process_person(name, b_date))
-        except:
-            continue
+        for _, row in df_raw.iterrows():
+            try:
+                b_date = pd.to_datetime(row['Birthday'], dayfirst=True).date()
+                all_data.append(process_person(row['Full_Name'], b_date))
+            except:
+                continue
+    else:
+        st.error("לא נמצא קישור לאקסל ב-Secrets של האפליקציה.")
+        st.stop()
 
 except Exception as e:
-    st.error(f"שגיאת חיבור: {e}")
-
+    st.error(f"שגיאה בטעינת הנתונים: {e}")
 
 # הוספת אנשים זמניים מה-session_state אם יש
 if 'temp_people' in st.session_state:
@@ -148,6 +145,7 @@ if spreadsheet_url: st.link_button("🔗 פתח אקסל לעריכה קבועה
 
 
 st.link_button("➕ הוסף בן משפחה חדש", "https://docs.google.com/forms/d/e/1FAIpQLSdcsuBKHO_eQ860_Lmjim21XC1P1gUnlB8oZaolH0PkmlVBsA/viewform?usp=publish-editor")
+
 
 
 
