@@ -48,7 +48,7 @@ all_data = []
 
 # טעינת נתונים מגוגל שיטס
 try:
-    # שליפת המזהים מה-Secrets
+    # שליפת המזהים מה-Secrets מאתר streamlit
     sheet_id = st.secrets["gsheets"]["sheet_id"]
     gid = st.secrets["gsheets"]["gid"]
     
@@ -69,12 +69,11 @@ try:
             if pd.notnull(name) and pd.notnull(b_day):
                 try:
                     b_date = pd.to_datetime(b_day, dayfirst=True).date()
-                    # קריאה לפונקציית העיבוד שלך
+                    # קריאה לפונקציית העיבוד 
                     all_data.append(process_person(str(name), b_date))
                 except:
                     continue
 except Exception:
-    # מציג שגיאה רק אם יש בעיה אמיתית בגישה לגיליון
     st.error("שגיאה בטעינת הנתונים מהגיליון.")
 #-------------------------------------------------------------------------------------------------------
 # הוספת אנשים זמניים מה-session_state אם יש
@@ -132,16 +131,16 @@ if all_data:
         height=600 
     )
 
-# ---   הוספה רשימה ורענון ---
+# ---   הוספה   ---
 form_link = st.secrets["gsheets"].get("form_url", "#")
 
 # יצירת הכפתור הדינמי
 st.link_button("➕ הוסף בן משפחה חדש", form_link)
-
+# ---   רענון ---
 if st.button("🔄 רענון נתונים"):
         st.cache_data.clear()
         st.rerun()
-#st.link_button("➕ הוסף בן משפחה חדש", "https://docs.google.com/forms/d/e/1FAIpQLSdcsuBKHO_eQ860_Lmjim21XC1P1gUnlB8oZaolH0PkmlVBsA/viewform?usp=publish-editor")
+ 
 
 
 
