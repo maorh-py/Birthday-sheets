@@ -53,7 +53,7 @@ try:
     if "connections" in st.secrets and "gsheets" in st.secrets["connections"]:
         spreadsheet_url = st.secrets["connections"]["gsheets"]["spreadsheet"]
         
-        df_raw = conn.read(spreadsheet=spreadsheet_url, worksheet="Data", ttl=0).dropna(how="all")
+        df_raw = conn.read(spreadsheet=spreadsheet_url, ttl=0).dropna(how="all")
 
         for _, row in df_raw.iterrows():
             try:
@@ -145,6 +145,7 @@ if spreadsheet_url: st.link_button("🔗 פתח אקסל לעריכה קבועה
 
 
 st.link_button("➕ הוסף בן משפחה חדש", "https://docs.google.com/forms/d/e/1FAIpQLSdcsuBKHO_eQ860_Lmjim21XC1P1gUnlB8oZaolH0PkmlVBsA/viewform?usp=publish-editor")
+
 
 
 
