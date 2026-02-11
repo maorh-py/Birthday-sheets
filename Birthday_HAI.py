@@ -49,31 +49,36 @@ all_data = []
 # טעינת נתונים מגוגל שיטס
 try:
     conn = st.connection("gsheets", type=GSheetsConnection)
-    spreadsheet_url = st.secrets["connections"]["gsheets"]["spreadsheet"]
+    # שימוש בקישור הישיר מה-Secrets
+    url = st.secrets["connections"]["gsheets"]["spreadsheet"]
 
-    # ---טעינת נתונים ראשונית  -
+    # --- קריאת לשונית Data ---
     try:
-        df_data = conn.read(spreadsheet=spreadsheet_url, worksheet="Data", ttl=0).dropna(how="all")
-        for _, row in df_data.iterrows():
-            try:
-                name = row['Full_Name']
-                b_date = pd.to_datetime(row['Birthday'], dayfirst=True).date()
-                all_data.append(process_person(name, b_date))
-            except: continue
+        # כאן חשוב שהשם יהיה בדיוק כמו בטאב: Data
+        df1 = conn.read(spreadsheet=url, worksheet="Data", ttl=0)
+        if not df1.empty:
+            for _, row in df1.dropna(how="all").iterrows():
+                try:
+                    all_data.append(process_person(row['Full_Name'], pd.to_datetime(row['Birthday'], dayfirst=True).date()))
+                except: continue
     except Exception as e:
-        st.warning(f"לא הצלחתי לקרוא נתונים  : {e}")
+        st.error(f"שגיאה בלשונית Data: {e}")
 
-    # --- טעינת נתונים חדשים - ---
+    # --- קריאת לשונית Form_Responses ---
     try:
-        df_form = conn.read(spreadsheet=spreadsheet_url, worksheet="Form_Responses", ttl=0).dropna(how="all")
-        for _, row in df_form.iterrows():
-            try:
-                name = row['שם מלא']
-                b_date = pd.to_datetime(row['תאריך לידה']).date()
-                all_data.append(process_person(name, b_date))
-            except: continue
+        # כאן חשוב שהשם יהיה בדיוק כמו בטאב: Form_Responses
+        df2 = conn.read(spreadsheet=url, worksheet="Form_Responses", ttl=0)
+        if not df2.empty:
+            for _, row in df2.dropna(how="all").iterrows():
+                try:
+                    # שימוש בשמות העמודות החדשים מהטופס
+                    name = row['שם מלא']
+                    # גוגל פורמס שולח תאריך בפורמט סטנדרטי בד"כ
+                    b_date = pd.to_datetime(row['תאריך לידה']).date()
+                    all_data.append(process_person(name, b_date))
+                except: continue
     except Exception as e:
-        st.warning(f"לא הצלחתי לקרוא נתונים חדשים : {e}")
+        st.error(f"שגיאה בלשונית Form_Responses: {e}")
 
 except Exception as e:
     st.error(f"שגיאת חיבור כללית: {e}")
@@ -155,6 +160,7 @@ if spreadsheet_url: st.link_button("🔗 פתח אקסל לעריכה קבועה
 
 
 st.link_button("➕ הוסף בן משפחה חדש", "https://docs.google.com/forms/d/e/1FAIpQLSdcsuBKHO_eQ860_Lmjim21XC1P1gUnlB8oZaolH0PkmlVBsA/viewform?usp=publish-editor")
+
 
 
 
