@@ -49,15 +49,29 @@ all_data = []
 # טעינת נתונים מגוגל שיטס
 try:
     conn = st.connection("gsheets", type=GSheetsConnection)
-    df_raw = conn.read(ttl=0).dropna(how="all")
-    for _, row in df_raw.iterrows():
-        try:
-            b_date = pd.to_datetime(row['Birthday'], dayfirst=True).date()
-            all_data.append(process_person(row['Full_Name'], b_date))
-        except: continue
-except: pass
+    
+    # בדיקה אם הקישור קיים ב-Secrets של האפליקציה הספציפית הזו
+    if "connections" in st.secrets and "gsheets" in st.secrets["connections"]:
+        spreadsheet_url = st.secrets["connections"]["gsheets"]["spreadsheet"]
+        # קריאה מהקישור הספציפי שנמצא ב-Secrets
+        df_raw = conn.read(spreadsheet=spreadsheet_url, ttl=0).dropna(how="all")
+        
+        for _, row in df_raw.iterrows():
+            try:
+                b_date = pd.to_datetime(row['Birthday'], dayfirst=True).date()
+                all_data.append(process_person(row['Full_Name'], b_date))
+            except:
+                continue
+    else:
+        st.error("לא נמצא קישור לאקסל ב-Secrets של האפליקציה.")
+        st.stop()
 
-all_data.extend(st.session_state.temp_people)
+except Exception as e:
+    st.error(f"שגיאה בטעינת הנתונים: {e}")
+
+# הוספת אנשים זמניים מה-session_state אם יש
+if 'temp_people' in st.session_state:
+    all_data.extend(st.session_state.temp_people)
 today = date.today()
 
 # --- מי חוגג היום ---
@@ -116,6 +130,7 @@ with st.expander("⏱️ הוספה זמנית / רענון"):
             if t_name:
                 st.session_state.temp_people.append(process_person(t_name, t_date, is_temporary=True))
                 st.rerun()
+
 
 
 
