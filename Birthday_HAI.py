@@ -47,34 +47,26 @@ if "temp_people" not in st.session_state:
 all_data = []
 
 # טעינת נתונים מגוגל שיטס
-
 try:
-    # הגדרות הקישור שעבדו
-    sheet_id = "1dIJIgpiND9yj4mWPZNxDwZaQyxDqAATH6Lp_TLFXmwI"
-    gid = "294868866"
+    # שליפת הנתונים מה-Secrets במקום לכתוב אותם קשיח בקוד
+    sheet_id = st.secrets["gsheets"]["sheet_id"]
+    gid = st.secrets["gsheets"]["gid"]
+    
     csv_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid={gid}"
     
-    # משיכת נתונים שקטה
     df = pd.read_csv(csv_url)
-
-    if not df.empty:
-        df.columns = df.columns.str.strip()
-        
-        for _, row in df.iterrows():
+    df.columns = df.columns.str.strip()
+    
+    for _, row in df.iterrows():
+        name, b_day = row.get('Full_Name'), row.get('Birthday')
+        if pd.notnull(name) and pd.notnull(b_day):
             try:
-                name = row.get('Full_Name')
-                b_day = row.get('Birthday')
-                
-                if pd.notnull(name) and pd.notnull(b_day):
-                    b_date = pd.to_datetime(b_day, dayfirst=True).date()
-                    # כאן הקריאה לפונקציה המקורית שלך שמעבדת את האדם
-                    all_data.append(process_person(str(name), b_date))
+                b_date = pd.to_datetime(b_day, dayfirst=True).date()
+                all_data.append(process_person(str(name), b_date))
             except:
                 continue
-
-except Exception as e:
-    # נשאיר רק הודעת שגיאה למקרה של תקלה טכנית אמיתית
-    st.error("חלה שגיאה בטעינת הנתונים. אנא נסו שוב מאוחר יותר.")
+except Exception:
+    st.error("שגיאה בטעינת הנתונים")
 #-------------------------------------------------------------------------------------------------------
 # הוספת אנשים זמניים מה-session_state אם יש
 if 'temp_people' in st.session_state:
@@ -153,6 +145,7 @@ if spreadsheet_url: st.link_button("🔗 פתח אקסל לעריכה קבועה
 
 
 st.link_button("➕ הוסף בן משפחה חדש", "https://docs.google.com/forms/d/e/1FAIpQLSdcsuBKHO_eQ860_Lmjim21XC1P1gUnlB8oZaolH0PkmlVBsA/viewform?usp=publish-editor")
+
 
 
 
