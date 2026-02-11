@@ -2,9 +2,6 @@ import streamlit as st
 import pandas as pd
 from datetime import date
 from pyluach import dates
-import re
-from streamlit_gsheets import GSheetsConnection
-import urllib.parse
 
 # הגדרות דף
 st.set_page_config(page_title="לוח ימי הולדת משפחתי", layout="centered")
@@ -156,6 +153,7 @@ if spreadsheet_url: st.link_button("🔗 פתח אקסל לעריכה קבועה
 
 
 st.link_button("➕ הוסף בן משפחה חדש", "https://docs.google.com/forms/d/e/1FAIpQLSdcsuBKHO_eQ860_Lmjim21XC1P1gUnlB8oZaolH0PkmlVBsA/viewform?usp=publish-editor")
+
 
 
 
