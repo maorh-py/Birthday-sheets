@@ -49,25 +49,34 @@ all_data = []
 # טעינת נתונים מגוגל שיטס
 try:
     conn = st.connection("gsheets", type=GSheetsConnection)
-    
-    # בדיקה אם הקישור קיים ב-Secrets של האפליקציה הספציפית הזו
-    if "connections" in st.secrets and "gsheets" in st.secrets["connections"]:
-        spreadsheet_url = st.secrets["connections"]["gsheets"]["spreadsheet"]
-        # קריאה מהקישור הספציפי שנמצא ב-Secrets
-        df_raw = conn.read(spreadsheet=spreadsheet_url, ttl=0).dropna(how="all")
-        
-        for _, row in df_raw.iterrows():
+    spreadsheet_url = st.secrets["connections"]["gsheets"]["spreadsheet"]
+
+    # ---טעינת נתונים ראשונית  -
+    try:
+        df_data = conn.read(spreadsheet=spreadsheet_url, worksheet="Data", ttl=0).dropna(how="all")
+        for _, row in df_data.iterrows():
             try:
+                name = row['Full_Name']
                 b_date = pd.to_datetime(row['Birthday'], dayfirst=True).date()
-                all_data.append(process_person(row['Full_Name'], b_date))
-            except:
-                continue
-    else:
-        st.error("לא נמצא קישור לאקסל ב-Secrets של האפליקציה.")
-        st.stop()
+                all_data.append(process_person(name, b_date))
+            except: continue
+    except Exception as e:
+        st.warning(f"לא הצלחתי לקרוא נתונים  : {e}")
+
+    # --- טעינת נתונים חדשים - ---
+    try:
+        df_form = conn.read(spreadsheet=spreadsheet_url, worksheet="Form_Responses", ttl=0).dropna(how="all")
+        for _, row in df_form.iterrows():
+            try:
+                name = row['שם מלא']
+                b_date = pd.to_datetime(row['תאריך לידה']).date()
+                all_data.append(process_person(name, b_date))
+            except: continue
+    except Exception as e:
+        st.warning(f"לא הצלחתי לקרוא נתונים חדשים : {e}")
 
 except Exception as e:
-    st.error(f"שגיאה בטעינת הנתונים: {e}")
+    st.error(f"שגיאת חיבור כללית: {e}")
 
 # הוספת אנשים זמניים מה-session_state אם יש
 if 'temp_people' in st.session_state:
@@ -145,6 +154,7 @@ if spreadsheet_url: st.link_button("🔗 פתח אקסל לעריכה קבועה
 
 
 
+st.link_button("➕ הוסף בן משפחה חדש", "https://docs.google.com/forms/d/e/1FAIpQLSdcsuBKHO_eQ860_Lmjim21XC1P1gUnlB8oZaolH0PkmlVBsA/viewform?usp=publish-editor")
 
 
 
