@@ -79,7 +79,18 @@ hbd_today = [p for p in all_data if p["חודש"] == today.month and p["יום"]
 if hbd_today:
     st.balloons()
     for p in hbd_today:
-        st.success(f"🎈 מזל טוב {p['שם']}! חוגג/ת היום {p['גיל']} 🎈")
+        st.markdown(f"""
+            <div style="text-align: center; border: 3px solid #FF4B4B; border-radius: 20px; padding: 20px; background-color: #FFF5F5; margin-bottom: 20px;">
+                <div style="font-size: 60px;">🎈</div>
+                <div style="font-size: 50px; font-weight: bold; color: #FF4B4B; line-height: 1.2;">
+                    מזל טוב {p['שם']}!
+                </div>
+                <div style="font-size: 35px; color: #31333F; margin-top: 10px;">
+                    חוגג/ת היום {p['גיל']}
+                </div>
+                <div style="font-size: 60px; margin-top: 10px;">🎈</div>
+            </div>
+        """, unsafe_allow_html=True)
 
 # פונקציית צביעה
 def color_rows(df, original_list):
@@ -130,6 +141,7 @@ with st.expander("⏱️ הוספה זמנית / רענון"):
             if t_name:
                 st.session_state.temp_people.append(process_person(t_name, t_date, is_temporary=True))
                 st.rerun()
+
 
 
 
