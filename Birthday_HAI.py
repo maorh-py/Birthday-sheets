@@ -81,13 +81,12 @@ if hbd_today:
     for p in hbd_today:
         st.markdown(f"""
             <div style="text-align: center; border: 3px solid #FF4B4B; border-radius: 20px; padding: 20px; background-color: #FFF5F5; margin-bottom: 20px;">
-                <div style="font-size: 60px;">🎈</div>
+                <div style="font-size: 60px;">🎈<
                 <div style="font-size: 50px; font-weight: bold; color: #FF4B4B; line-height: 1.2;">
-                    מזל טוב {p['שם']}!
+                    מזל טוב  </div> {p['שם']}!
                 </div>
                 <div style="font-size: 35px; color: #31333F; margin-top: 10px;">
                     חוגג/ת היום {p['גיל']}
-                </div>
                 <div style="font-size: 60px; margin-top: 10px;">🎈</div>
             </div>
         """, unsafe_allow_html=True)
@@ -141,6 +140,7 @@ with st.expander("⏱️ הוספה זמנית / רענון"):
             if t_name:
                 st.session_state.temp_people.append(process_person(t_name, t_date, is_temporary=True))
                 st.rerun()
+
 
 
 
