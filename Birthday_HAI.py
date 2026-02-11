@@ -51,53 +51,43 @@ all_data = []
 
 # טעינת נתונים מגוגל שיטס
 
-
-all_data = []
-
 try:
-    # 1. שליפת הקישור וניקוי בסיסי
-    raw_url = st.secrets["connections"]["gsheets"]["spreadsheet"]
+    # 1. שימוש ב-ID של הגיליון וב-GID המדויק ששלחת
+    sheet_id = "1dIJIgpiND9yj4mWPZNxDwZaQyxDqAATH6Lp_TLFXmwI"
+    gid = "294868866" # ה-GID של לשונית Data לפי הקישור שלך
     
-    # חילוץ ה-ID הבסיסי (מוודא שאין שאריות של /edit בסוף)
-    base_url = raw_url.split('/edit')[0].split('/view')[0]
+    csv_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid={gid}"
     
-    # 2. בניית שאילתת ה-CSV (זו הדרך המדויקת ביותר למנוע 404)
-    # אנחנו משתמשים בפרמטר sheet כדי למצוא את "Data"
-    params = {
-        'tqx': 'out:csv',
-        'sheet': 'Data'
-    }
-    query_string = urllib.parse.urlencode(params)
-    csv_url = f"{base_url}/gviz/tq?{query_string}"
-
-    # 3. קריאה באמצעות פנדס
+    # 2. קריאה ישירה
     df = pd.read_csv(csv_url)
 
     if not df.empty:
-        # ניקוי כותרות
+        # ניקוי כותרות (חשוב מאוד!)
         df.columns = df.columns.str.strip()
+        
+        # הדפסה קטנה רק לראות שזה עובד
+        st.write(f"✅ התחברתי בהצלחה ללשונית הנכונה! נמצאו {len(df)} שורות.")
         
         for _, row in df.iterrows():
             try:
+                # שליפת נתונים לפי שמות העמודות המדויקים באקסל
                 name = row.get('Full_Name')
                 b_day = row.get('Birthday')
                 
                 if pd.notnull(name) and pd.notnull(b_day):
-                    # המרה בטוחה
+                    # המרה לתאריך (dayfirst=True בגלל הפורמט הישראלי)
                     b_date = pd.to_datetime(b_day, dayfirst=True).date()
                     all_data.append(process_person(str(name), b_date))
-            except:
+            except Exception as e:
                 continue
         
         if all_data:
-            st.success(f"נמצאו {len(all_data)} חוגגים!")
-        else:
-            st.warning("החיבור הצליח, אך לא נמצאו נתונים תחת הכותרות Full_Name ו-Birthday.")
+            st.success(f"נטענו {len(all_data)} אנשים מהרשימה.")
     else:
-        st.error("הגיליון נקרא אך הוא נראה ריק.")
+        st.warning("הגיליון נמצא אך הוא ריק. וודא שהנתונים נמצאים בלשונית Data.")
 
 except Exception as e:
-    st.error(f"שגיאה בניסיון הגישה: {e}")
+    st.error(f"שגיאה: {e}")
 #-------------------------------------------------------------------------------------------------------
 # הוספת אנשים זמניים מה-session_state אם יש
 if 'temp_people' in st.session_state:
@@ -176,6 +166,7 @@ if spreadsheet_url: st.link_button("🔗 פתח אקסל לעריכה קבועה
 
 
 st.link_button("➕ הוסף בן משפחה חדש", "https://docs.google.com/forms/d/e/1FAIpQLSdcsuBKHO_eQ860_Lmjim21XC1P1gUnlB8oZaolH0PkmlVBsA/viewform?usp=publish-editor")
+
 
 
 
