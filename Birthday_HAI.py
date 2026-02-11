@@ -47,46 +47,38 @@ if "temp_people" not in st.session_state:
 all_data = []
 
 # טעינת נתונים מגוגל שיטס
-# קוד לאפליקציה השנייה ב-Branch החדש
+
+
 try:
     conn = st.connection("gsheets", type=GSheetsConnection)
-    url = st.secrets["connections"]["gsheets"]["spreadsheet"]
+    spreadsheet_url = st.secrets["connections"]["gsheets"]["spreadsheet"]
     
-    # 1. ננסה לקרוא את הלשונית "Data"
-    df_debug = conn.read(spreadsheet=url, worksheet="Data", ttl=0)
+    # הוספת ה-GID ישירות לקישור עוקפת את הצורך בפרמטר worksheet
+    # זה בדרך כלל פותר שגיאות 400 מול גוגל
+    full_url = f"{spreadsheet_url.rstrip('/')}/edit#gid=0"
     
-    st.write("### 🔍 בדיקת מעבדה (Branch: dev)")
-    st.write(f"נמצאו {len(df_debug)} שורות בלשונית Data.")
-    
-    # הצגת שמות העמודות כפי שהקוד רואה אותן
-    st.write("שמות העמודות בגיליון:", df_debug.columns.tolist())
-    
-    # הצגת 5 השורות הראשונות כדי לראות את התוכן
-    st.write("תצוגה מקדימה של הנתונים:")
-    st.dataframe(df_debug.head())
+    # קריאה ללא הפרמטר worksheet= כי ה-URL כבר מכיל אותו
+    df = conn.read(spreadsheet=full_url, ttl=0).dropna(how="all")
 
-    # 2. לוגיקת העיבוד (עם 'תפיסה' רחבה יותר)
-    all_data = []
-    for index, row in df_debug.iterrows():
-        # ניסיון גמיש: מחפשים עמודה שמתחילה ב-Full או ב-Birthday
-        # זה עוזר אם יש רווחים נסתרים בשם העמודה
-        name_col = [c for c in df_debug.columns if 'Full' in str(c)]
-        date_col = [c for c in df_debug.columns if 'Birth' in str(c)]
+    if not df.empty:
+        st.write(f"✅ הצלחתי! נמצאו {len(df)} שורות")
+        # הצגת שמות העמודות כדי לוודא שאנחנו בלשונית הנכונה
+        st.write("עמודות:", df.columns.tolist())
         
-        if name_col and date_col:
-            name = row[name_col[0]]
-            b_day = row[date_col[0]]
-            
-            if pd.notnull(name) and pd.notnull(b_day):
-                try:
+        for _, row in df.iterrows():
+            try:
+                name = row.get('Full_Name')
+                b_day = row.get('Birthday')
+                if pd.notnull(name) and pd.notnull(b_day):
                     b_date = pd.to_datetime(b_day, dayfirst=True).date()
                     all_data.append(process_person(str(name), b_date))
-                except:
-                    continue
+            except:
+                continue
+    else:
+        st.warning("הצלחתי להתחבר, אבל הטבלה ריקה.")
 
 except Exception as e:
-    st.error(f"שגיאה קריטית בברנץ': {e}")
-
+    st.error(f"שגיאה בגישה לגיליון: {e}")
 #-------------------------------------------------------------------------------------------------------
 # הוספת אנשים זמניים מה-session_state אם יש
 if 'temp_people' in st.session_state:
@@ -165,6 +157,7 @@ if spreadsheet_url: st.link_button("🔗 פתח אקסל לעריכה קבועה
 
 
 st.link_button("➕ הוסף בן משפחה חדש", "https://docs.google.com/forms/d/e/1FAIpQLSdcsuBKHO_eQ860_Lmjim21XC1P1gUnlB8oZaolH0PkmlVBsA/viewform?usp=publish-editor")
+
 
 
 
