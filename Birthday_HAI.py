@@ -48,26 +48,35 @@ all_data = []
 
 # טעינת נתונים מגוגל שיטס
 try:
-    conn = st.connection("gsheets", type=GSheetsConnection)
+    # שליפת המזהים מה-Secrets
+    sheet_id = st.secrets["gsheets"]["sheet_id"]
+    gid = st.secrets["gsheets"]["gid"]
+    
+    # בניית הקישור בצורה דינמית
+    csv_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid={gid}"
+    
+    # קריאת הנתונים
+    df = pd.read_csv(csv_url)
 
-    if "connections" in st.secrets and "gsheets" in st.secrets["connections"]:
-        spreadsheet_url = st.secrets["connections"]["gsheets"]["spreadsheet"]
+    if not df.empty:
+        # ניקוי רווחים משמות העמודות
+        df.columns = df.columns.str.strip()
         
-        df_raw = conn.read(spreadsheet=spreadsheet_url, ttl=0).dropna(how="all")
-
-        for _, row in df_raw.iterrows():
-            try:
-                b_date = pd.to_datetime(row['Birthday'], dayfirst=True).date()
-                all_data.append(process_person(row['Full_Name'], b_date))
-            except:
-                continue
-    else:
-        st.error("לא נמצא קישור לאקסל ב-Secrets של האפליקציה.")
-        st.stop()
-
-except Exception as e:
-    st.error(f"שגיאה בטעינת הנתונים: {e}")
-
+        for _, row in df.iterrows():
+            name = row.get('Full_Name')
+            b_day = row.get('Birthday')
+            
+            if pd.notnull(name) and pd.notnull(b_day):
+                try:
+                    b_date = pd.to_datetime(b_day, dayfirst=True).date()
+                    # קריאה לפונקציית העיבוד שלך
+                    all_data.append(process_person(str(name), b_date))
+                except:
+                    continue
+except Exception:
+    # מציג שגיאה רק אם יש בעיה אמיתית בגישה לגיליון
+    st.error("שגיאה בטעינת הנתונים מהגיליון.")
+#-------------------------------------------------------------------------------------------------------
 # הוספת אנשים זמניים מה-session_state אם יש
 if 'temp_people' in st.session_state:
     all_data.extend(st.session_state.temp_people)
@@ -123,28 +132,30 @@ if all_data:
         height=600 
     )
 
-# --- הוספה זמנית ---
-with st.expander("⏱️ הוספה זמנית / רענון"):
-    if st.button("🔄 רענון נתונים"):
+# ---   הוספה רשימה ורענון ---
+if st.button("🔄 רענון נתונים"):
         st.cache_data.clear()
         st.rerun()
-    with st.form("temp_add", clear_on_submit=True):
-        c1, c2 = st.columns(2)
-        with c1: t_name = st.text_input("שם:")
-        with c2: t_date = st.date_input("תאריך לידה:", value=date(2000, 1, 1))
-        if st.form_submit_button("הוסף"):
-            if t_name:
-                st.session_state.temp_people.append(process_person(t_name, t_date, is_temporary=True))
-                st.rerun()
-
-
-# --- הוספה קבועה ---
-st.subheader("📌 הוספה קבועה")
-if spreadsheet_url: st.link_button("🔗 פתח אקסל לעריכה קבועה", spreadsheet_url)
-
-
-
 st.link_button("➕ הוסף בן משפחה חדש", "https://docs.google.com/forms/d/e/1FAIpQLSdcsuBKHO_eQ860_Lmjim21XC1P1gUnlB8oZaolH0PkmlVBsA/viewform?usp=publish-editor")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
