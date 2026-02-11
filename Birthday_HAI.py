@@ -48,25 +48,34 @@ all_data = []
 
 # טעינת נתונים מגוגל שיטס
 try:
-    # שליפת הנתונים מה-Secrets במקום לכתוב אותם קשיח בקוד
+    # שליפת המזהים מה-Secrets
     sheet_id = st.secrets["gsheets"]["sheet_id"]
     gid = st.secrets["gsheets"]["gid"]
     
+    # בניית הקישור בצורה דינמית
     csv_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid={gid}"
     
+    # קריאת הנתונים
     df = pd.read_csv(csv_url)
-    df.columns = df.columns.str.strip()
-    
-    for _, row in df.iterrows():
-        name, b_day = row.get('Full_Name'), row.get('Birthday')
-        if pd.notnull(name) and pd.notnull(b_day):
-            try:
-                b_date = pd.to_datetime(b_day, dayfirst=True).date()
-                all_data.append(process_person(str(name), b_date))
-            except:
-                continue
+
+    if not df.empty:
+        # ניקוי רווחים משמות העמודות
+        df.columns = df.columns.str.strip()
+        
+        for _, row in df.iterrows():
+            name = row.get('Full_Name')
+            b_day = row.get('Birthday')
+            
+            if pd.notnull(name) and pd.notnull(b_day):
+                try:
+                    b_date = pd.to_datetime(b_day, dayfirst=True).date()
+                    # קריאה לפונקציית העיבוד שלך
+                    all_data.append(process_person(str(name), b_date))
+                except:
+                    continue
 except Exception:
-    st.error("שגיאה בטעינת הנתונים")
+    # מציג שגיאה רק אם יש בעיה אמיתית בגישה לגיליון
+    st.error("שגיאה בטעינת הנתונים מהגיליון.")
 #-------------------------------------------------------------------------------------------------------
 # הוספת אנשים זמניים מה-session_state אם יש
 if 'temp_people' in st.session_state:
@@ -145,6 +154,7 @@ if spreadsheet_url: st.link_button("🔗 פתח אקסל לעריכה קבועה
 
 
 st.link_button("➕ הוסף בן משפחה חדש", "https://docs.google.com/forms/d/e/1FAIpQLSdcsuBKHO_eQ860_Lmjim21XC1P1gUnlB8oZaolH0PkmlVBsA/viewform?usp=publish-editor")
+
 
 
 
