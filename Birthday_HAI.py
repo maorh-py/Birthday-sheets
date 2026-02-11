@@ -52,42 +52,32 @@ all_data = []
 # טעינת נתונים מגוגל שיטס
 
 try:
-    # 1. שימוש ב-ID של הגיליון וב-GID המדויק ששלחת
+    # הגדרות הקישור שעבדו
     sheet_id = "1dIJIgpiND9yj4mWPZNxDwZaQyxDqAATH6Lp_TLFXmwI"
-    gid = "294868866" # ה-GID של לשונית Data לפי הקישור שלך
-    
+    gid = "294868866"
     csv_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid={gid}"
     
-    # 2. קריאה ישירה
+    # משיכת נתונים שקטה
     df = pd.read_csv(csv_url)
 
     if not df.empty:
-        # ניקוי כותרות (חשוב מאוד!)
         df.columns = df.columns.str.strip()
-        
-        # הדפסה קטנה רק לראות שזה עובד
-        st.write(f"✅ התחברתי בהצלחה ללשונית הנכונה! נמצאו {len(df)} שורות.")
         
         for _, row in df.iterrows():
             try:
-                # שליפת נתונים לפי שמות העמודות המדויקים באקסל
                 name = row.get('Full_Name')
                 b_day = row.get('Birthday')
                 
                 if pd.notnull(name) and pd.notnull(b_day):
-                    # המרה לתאריך (dayfirst=True בגלל הפורמט הישראלי)
                     b_date = pd.to_datetime(b_day, dayfirst=True).date()
+                    # כאן הקריאה לפונקציה המקורית שלך שמעבדת את האדם
                     all_data.append(process_person(str(name), b_date))
-            except Exception as e:
+            except:
                 continue
-        
-        if all_data:
-            st.success(f"נטענו {len(all_data)} אנשים מהרשימה.")
-    else:
-        st.warning("הגיליון נמצא אך הוא ריק. וודא שהנתונים נמצאים בלשונית Data.")
 
 except Exception as e:
-    st.error(f"שגיאה: {e}")
+    # נשאיר רק הודעת שגיאה למקרה של תקלה טכנית אמיתית
+    st.error("חלה שגיאה בטעינת הנתונים. אנא נסו שוב מאוחר יותר.")
 #-------------------------------------------------------------------------------------------------------
 # הוספת אנשים זמניים מה-session_state אם יש
 if 'temp_people' in st.session_state:
@@ -166,6 +156,7 @@ if spreadsheet_url: st.link_button("🔗 פתח אקסל לעריכה קבועה
 
 
 st.link_button("➕ הוסף בן משפחה חדש", "https://docs.google.com/forms/d/e/1FAIpQLSdcsuBKHO_eQ860_Lmjim21XC1P1gUnlB8oZaolH0PkmlVBsA/viewform?usp=publish-editor")
+
 
 
 
