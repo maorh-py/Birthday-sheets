@@ -51,38 +51,37 @@ all_data = []
 # טעינת נתונים מגוגל שיטס
 
 try:
-    # חיבור רגיל באמצעות ה-Secrets התקין שלך
-    conn = st.connection("gsheets", type=GSheetsConnection)
+    # שליפת הקישור מה-Secrets התקין שלך
     url = st.secrets["connections"]["gsheets"]["spreadsheet"]
     
-    # קריאה מלשונית Data בלבד
-    df = conn.read(spreadsheet=url, worksheet="Data", ttl=0)
+    # המרה לקישור הורדה ישיר - זה עוקף את רוב שגיאות ה-400
+    csv_url = url.replace('/edit', '/export?format=csv')
+    if 'gid=' not in csv_url:
+        csv_url += '&gid=0'
 
-    if df is not None and not df.empty:
-        # --- שלב קריטי: ניקוי כותרות ורווחים ---
-        df.columns = df.columns.str.strip() # מסיר רווחים משמות העמודות
-        df = df.dropna(how="all")          # מסיר שורות ריקות לחלוטין
-        
+    # קריאה ישירה
+    df = pd.read_csv(csv_url)
+
+    if not df.empty:
+        df.columns = df.columns.str.strip()
         for _, row in df.iterrows():
             try:
-                # שליפת נתונים
                 name = row.get('Full_Name')
                 b_day = row.get('Birthday')
-                
                 if pd.notnull(name) and pd.notnull(b_day):
-                    # המרה בטוחה לתאריך
                     b_date = pd.to_datetime(b_day, dayfirst=True).date()
                     all_data.append(process_person(str(name), b_date))
             except:
                 continue
-
-    if not all_data:
-        st.warning("החיבור הצליח, אך לא נמצאו נתונים תקינים בעמודות Full_Name ו-Birthday.")
-        # הדפסה זמנית כדי שתראה מה הגיע מהאקסל
-        st.write("עמודות שנמצאו בפועל:", df.columns.tolist())
+        
+        if all_data:
+            st.success(f"נמצאו {len(all_data)} אנשים!")
+    else:
+        st.warning("הקובץ נקרא אך הוא ריק.")
 
 except Exception as e:
-    st.error(f"שגיאה בחיבור (400): {e}")
+    st.error(f"שגיאת חיבור (400): {e}")
+    st.info("💡 אם השגיאה נמשכת, וודא שהגדרת Share -> Anyone with the link באקסל.")
 #-------------------------------------------------------------------------------------------------------
 # הוספת אנשים זמניים מה-session_state אם יש
 if 'temp_people' in st.session_state:
@@ -161,6 +160,7 @@ if spreadsheet_url: st.link_button("🔗 פתח אקסל לעריכה קבועה
 
 
 st.link_button("➕ הוסף בן משפחה חדש", "https://docs.google.com/forms/d/e/1FAIpQLSdcsuBKHO_eQ860_Lmjim21XC1P1gUnlB8oZaolH0PkmlVBsA/viewform?usp=publish-editor")
+
 
 
 
