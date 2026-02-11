@@ -139,6 +139,9 @@ with st.expander("⏱️ הוספה זמנית / רענון"):
                 st.rerun()
 
 
+# --- הוספה קבועה ---
+st.subheader("📌 הוספה קבועה")
+if spreadsheet_url: st.link_button("🔗 פתח אקסל לעריכה קבועה", spreadsheet_url)
 
 
 
