@@ -34,9 +34,9 @@ def process_person(name, bday_date, is_temporary=False):
         "תאריך לועזי": bday_date.strftime('%d/%m/%Y'),
         "תאריך עברי": h_date.hebrew_date_string(),
         "מזל": get_zodiac(bday_date.day, bday_date.month),
-        "גיל": age_years = today.year - bday_date.year - ((today.month, today.day) < (bday_date.month, bday_date.day))
-              months = (today.year - bday_date.year) * 12 + today.month - bday_date.month
-              display_age = f"{age_years}" if age_years > 0 else f"{max(months, 0)}M"# אם הגיל קטן משנה יוצג בחודשים
+        "גיל": (lambda y, m: f"{y}" if y > 0 else f"{m}M")(
+            today.year - bday_date.year - ((today.month, today.day) < (bday_date.month, bday_date.day)),
+            (today.year - bday_date.year) * 12 + today.month - bday_date.month),# אם הגיל קטן משנה יוצג בחודשים
         "עוד כמה ימים": (next_bday - today).days, 
         "חודש": bday_date.month,
         "יום": bday_date.day,
@@ -143,6 +143,7 @@ if st.button("🔄 רענון נתונים"):
         st.cache_data.clear()
         st.rerun()
  
+
 
 
 
