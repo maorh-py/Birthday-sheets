@@ -120,7 +120,7 @@ if all_data:
     
     columns_order = ["מזל", "תאריך לועזי", "תאריך עברי","גיל","שם"]
     df_all = pd.DataFrame(all_sorted)[columns_order]
-    df_all["גיל"] = df_all["גיל"].astype(str)
+    styled_df = df_all.style.apply(lambda x: color_rows(df_all, all_sorted), axis=None).format(str, subset=["גיל"])
     st.dataframe(
         df_all.style.apply(lambda x: color_rows(df_all, all_sorted), axis=None),
         column_config={
@@ -143,6 +143,7 @@ if st.button("🔄 רענון נתונים"):
         st.cache_data.clear()
         st.rerun()
  
+
 
 
 
