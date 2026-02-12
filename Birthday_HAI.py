@@ -126,7 +126,7 @@ if all_data:
         column_config={
             "שם": st.column_config.TextColumn("שם חוגג", width="medium"),
             "מזל": st.column_config.TextColumn("מזל", width="small"),
-            "גיל": st.column_config.NumberColumn("גיל", format="%d", width="small"),
+            "גיל": st.column_config.NumberColumn("גיל", width="small"),
         },
         hide_index=True,
         use_container_width=True,
@@ -143,6 +143,7 @@ if st.button("🔄 רענון נתונים"):
         st.cache_data.clear()
         st.rerun()
  
+
 
 
 
